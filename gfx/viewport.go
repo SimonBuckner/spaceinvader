@@ -12,6 +12,7 @@ type ViewPort struct {
 	window   *sdl.Window
 	renderer *sdl.Renderer
 	mouse    *Mouse
+	keyboard *Keyboard
 }
 
 // NewViewPort factory
@@ -41,12 +42,15 @@ func NewViewPort(title string, top, left, width, height int) (*ViewPort, error) 
 	}
 
 	vp.mouse = NewMouse()
+	vp.keyboard = NewKeyboard()
 	return vp, nil
 }
 
 // Run the main event loop for the ViewPort..
 func (vp *ViewPort) Run() {
-	i := uint8(0)
+	r := uint8(0)
+	g := uint8(0)
+
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch e := event.(type) {
@@ -59,19 +63,30 @@ func (vp *ViewPort) Run() {
 			}
 		}
 		vp.mouse.Refresh()
+		vp.keyboard.Refresh()
+
 		vp.renderer.Clear()
 
 		// Mouse events
 		if vp.mouse.LeftDown() {
-			if i < 254 {
-				i++
+			if r < 254 {
+				r++
 			}
 		} else if vp.mouse.RightDown() {
-			if i > 0 {
-				i--
+			if r > 0 {
+				r--
 			}
 		}
-		vp.SetBackgroundColor(i, 0, 0, 0)
+		if vp.keyboard.IsKeyDown(sdl.SCANCODE_G) {
+			if g < 254 {
+				g++
+			}
+		} else {
+			if g > 0 {
+				g--
+			}
+		}
+		vp.SetBackgroundColor(r, g, 0, 0)
 		vp.renderer.Present()
 		sdl.Delay(1)
 	}
@@ -80,6 +95,21 @@ func (vp *ViewPort) Run() {
 // SetBackgroundColor sets the background color
 func (vp *ViewPort) SetBackgroundColor(r, g, b, a uint8) {
 	vp.renderer.SetDrawColor(r, g, b, a)
+}
+
+// HasMouse returnes true if the ViewPort has the mouse
+func (vp *ViewPort) HasMouse() bool {
+	return sdl.GetMouseFocus() == vp.window
+}
+
+// HasKeyboard returnes true if the ViewPort has the keyboard
+func (vp *ViewPort) HasKeyboard() bool {
+	return sdl.GetKeyboardFocus() == vp.window
+}
+
+// HasBoth returnes true if the ViewPort has the mouse and the keyboard
+func (vp *ViewPort) HasBoth() bool {
+	return sdl.GetKeyboardFocus() == vp.window || sdl.GetMouseFocus() == vp.window
 }
 
 // NewSinglePixelTexture returns a new texture comprising a single pixel
