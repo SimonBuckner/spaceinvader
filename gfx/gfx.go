@@ -46,3 +46,19 @@ type UpdateHandler func(vp *ViewPort)
 type State interface {
 	IsRunning() bool
 }
+
+// HexColorToRGB converts a colour stored in an int to RGBA values
+func HexColorToRGBA(color int) *sdl.Color {
+
+	r := uint8((color & 0b11111111000000000000000000000000) >> 24)
+	g := uint8((color & 0b00000000111111110000000000000000) >> 16)
+	b := uint8((color & 0b00000000000000001111111100000000) >> 8)
+	a := uint8(color & 0b00000000000000000000000011111111)
+
+	return &sdl.Color{
+		R: r,
+		G: g,
+		B: b,
+		A: a,
+	}
+}
