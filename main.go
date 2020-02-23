@@ -80,5 +80,9 @@ func main() {
 	vp.KeyboardHandler = s.keyb
 	vp.UpdateHandler = s.update
 
+	asset := gfx.AssetFromBitmap(vp, alienSprCYB, 16, 7)
+	asset.SetPos(50, 50, 0)
+
+	vp.AddAsset(asset)
 	vp.Run(s)
 }

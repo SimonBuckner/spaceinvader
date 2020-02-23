@@ -18,6 +18,7 @@ type ViewPort struct {
 	MouseMotionHandler
 	MouseWheelHandler
 	UpdateHandler
+	Assets []*Asset
 }
 
 // NewViewPort factory
@@ -45,6 +46,8 @@ func NewViewPort(title string, top, left, width, height int) (*ViewPort, error) 
 		}
 		vp.renderer = renderer
 	}
+
+	vp.Assets = make([]*Asset, 0)
 
 	return vp, nil
 }
@@ -86,6 +89,9 @@ func (vp *ViewPort) Run(state State) {
 		if vp.UpdateHandler != nil {
 			vp.UpdateHandler(vp)
 		}
+
+		vp.DrawAssets()
+
 		vp.renderer.Present()
 		sdl.Delay(1)
 	}
@@ -136,4 +142,24 @@ func (vp *ViewPort) NewSinglePixelTexture(r, g, b, a uint8) (*sdl.Texture, error
 
 	tex.Update(nil, pixels, 4)
 	return tex, nil
+}
+
+// DrawAsset ..
+func (vp *ViewPort) DrawAssets() {
+	for _, asset := range vp.Assets {
+		tex := asset.Texture()
+		_, _, w, h, _ := tex.Query()
+		dstRect := sdl.Rect{
+			X: asset.pos.X,
+			Y: asset.pos.Y,
+			W: w,
+			H: h,
+		}
+		vp.renderer.Copy(tex, nil, &dstRect)
+	}
+}
+
+// AddAsset adds an asset
+func (vp *ViewPort) AddAsset(asset *Asset) {
+	vp.Assets = append(vp.Assets, asset)
 }
