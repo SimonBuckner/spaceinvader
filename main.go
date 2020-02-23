@@ -7,6 +7,64 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+type state struct {
+	running         bool
+	backgroundColor sdl.Color
+}
+
+// IsRunning returns true if the game is running
+func (s *state) IsRunning() bool {
+	return s.running
+}
+
+func (s *state) keyb(e *sdl.KeyboardEvent) {
+
+	if e.Type == sdl.KEYUP {
+		switch e.Keysym.Scancode {
+		case sdl.SCANCODE_Q:
+			fmt.Println("Q")
+			s.running = false
+		}
+		if e.Keysym.Scancode == sdl.SCANCODE_R {
+			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
+				if s.backgroundColor.R < 254 {
+					s.backgroundColor.R++
+				}
+			} else {
+				if s.backgroundColor.R > 0 {
+					s.backgroundColor.R--
+				}
+			}
+		}
+		if e.Keysym.Scancode == sdl.SCANCODE_G {
+			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
+				if s.backgroundColor.G < 254 {
+					s.backgroundColor.G++
+				}
+			} else {
+				if s.backgroundColor.G > 0 {
+					s.backgroundColor.G--
+				}
+			}
+		}
+		if e.Keysym.Scancode == sdl.SCANCODE_B {
+			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
+				if s.backgroundColor.B < 254 {
+					s.backgroundColor.B++
+				}
+			} else {
+				if s.backgroundColor.B > 0 {
+					s.backgroundColor.B--
+				}
+			}
+		}
+	}
+}
+
+func (s *state) update(vp *gfx.ViewPort) {
+	vp.SetBackgroundColor(s.backgroundColor)
+}
+
 func main() {
 
 	vp, err := gfx.NewViewPort("Space Invaders", 50, 100, 1024, 768)
@@ -15,52 +73,12 @@ func main() {
 	}
 	defer vp.Destroy()
 
-	vp.KeyboardHandler = keyb
-	vp.Run()
-}
-
-func keyb(vp *gfx.ViewPort, e *sdl.KeyboardEvent) {
-
-	if e.Type == sdl.KEYUP {
-		switch e.Keysym.Scancode {
-		case sdl.SCANCODE_Q:
-			fmt.Println("Q")
-			vp.Exit()
-		}
+	s := &state{
+		running:         true,
+		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
 	}
-	// if e.Type == sdl.KEYDOWN {
-	// 	if e.Keysym.Scancode == sdl.SCANCODE_R {
-	// 		if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-	// 			if r < 254 {
-	// 				r++
-	// 			}
-	// 		} else {
-	// 			if r > 0 {
-	// 				r--
-	// 			}
-	// 		}
-	// 	}
-	// 	if e.Keysym.Scancode == sdl.SCANCODE_G {
-	// 		if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-	// 			if g < 254 {
-	// 				g++
-	// 			}
-	// 		} else {
-	// 			if g > 0 {
-	// 				g--
-	// 			}
-	// 		}
-	// 	}
-	// 	if e.Keysym.Scancode == sdl.SCANCODE_B {
-	// 		if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-	// 			if b < 254 {
-	// 				b++
-	// 			}
-	// 		} else {
-	// 			if b > 0 {
-	// 				b--
-	// 			}
-	// 		}
-	// 	}
-	// }
+	vp.KeyboardHandler = s.keyb
+	vp.UpdateHandler = s.update
+
+	vp.Run(s)
 }

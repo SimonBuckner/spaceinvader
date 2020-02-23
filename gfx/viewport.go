@@ -11,13 +11,13 @@ type ViewPort struct {
 	left     int32
 	width    int32
 	height   int32
-	running  bool
 	window   *sdl.Window
 	renderer *sdl.Renderer
 	KeyboardHandler
 	MouseButtonHandler
 	MouseMotionHandler
 	MouseWheelHandler
+	UpdateHandler
 }
 
 // NewViewPort factory
@@ -50,15 +50,9 @@ func NewViewPort(title string, top, left, width, height int) (*ViewPort, error) 
 }
 
 // Run the main event loop for the ViewPort..
-func (vp *ViewPort) Run() {
-	vp.running = true
-
-	r := uint8(0)
-	g := uint8(0)
-	b := uint8(0)
-
+func (vp *ViewPort) Run(state State) {
 	for {
-		if !vp.running {
+		if !state.IsRunning() {
 			return
 		}
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -71,7 +65,7 @@ func (vp *ViewPort) Run() {
 				}
 			case *sdl.KeyboardEvent:
 				if vp.KeyboardHandler != nil {
-					vp.KeyboardHandler(vp, e)
+					vp.KeyboardHandler(e)
 				}
 			case *sdl.MouseButtonEvent:
 				if vp.MouseButtonHandler != nil {
@@ -89,8 +83,9 @@ func (vp *ViewPort) Run() {
 		}
 
 		vp.renderer.Clear()
-
-		vp.SetBackgroundColor(r, g, b, 0)
+		if vp.UpdateHandler != nil {
+			vp.UpdateHandler(vp)
+		}
 		vp.renderer.Present()
 		sdl.Delay(1)
 	}
@@ -107,14 +102,9 @@ func (vp *ViewPort) Destroy() {
 	}
 }
 
-// Exit flags the run loop to exit ..
-func (vp *ViewPort) Exit() {
-	vp.running = false
-}
-
 // SetBackgroundColor sets the background color
-func (vp *ViewPort) SetBackgroundColor(r, g, b, a uint8) {
-	vp.renderer.SetDrawColor(r, g, b, a)
+func (vp *ViewPort) SetBackgroundColor(color sdl.Color) {
+	vp.renderer.SetDrawColor(color.R, color.G, color.B, color.A)
 }
 
 // HasMouse returnes true if the ViewPort has the mouse
