@@ -26,3 +26,15 @@ func init() {
 		panic(err)
 	}
 }
+
+// KeyboardHandler registers a function to handle keyboard event
+type KeyboardHandler func(vp *ViewPort, e *sdl.KeyboardEvent)
+
+// MouseButtonHandler is called each time a mouse button event is triggered
+type MouseButtonHandler func(event *sdl.MouseButtonEvent)
+
+// MouseMotionHandler is called each time a mouse motion event is triggered
+type MouseMotionHandler func(event *sdl.MouseMotionEvent)
+
+// MouseWheelHandler is called each time a mouse wheel event is triggered
+type MouseWheelHandler func(event *sdl.MouseWheelEvent)

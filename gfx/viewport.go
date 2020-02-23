@@ -11,10 +11,13 @@ type ViewPort struct {
 	left     int32
 	width    int32
 	height   int32
+	running  bool
 	window   *sdl.Window
 	renderer *sdl.Renderer
-	mouse    *Mouse
-	keyboard *Keyboard
+	KeyboardHandler
+	MouseButtonHandler
+	MouseMotionHandler
+	MouseWheelHandler
 }
 
 // NewViewPort factory
@@ -43,18 +46,21 @@ func NewViewPort(title string, top, left, width, height int) (*ViewPort, error) 
 		vp.renderer = renderer
 	}
 
-	vp.mouse = NewMouse()
-	vp.keyboard = NewKeyboard()
 	return vp, nil
 }
 
 // Run the main event loop for the ViewPort..
 func (vp *ViewPort) Run() {
+	vp.running = true
+
 	r := uint8(0)
 	g := uint8(0)
 	b := uint8(0)
 
 	for {
+		if !vp.running {
+			return
+		}
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch e := event.(type) {
 			case *sdl.QuitEvent:
@@ -64,45 +70,23 @@ func (vp *ViewPort) Run() {
 					return
 				}
 			case *sdl.KeyboardEvent:
-				if e.Type == sdl.KEYDOWN {
-					if e.Keysym.Scancode == sdl.SCANCODE_R {
-						if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-							if r < 254 {
-								r++
-							}
-						} else {
-							if r > 0 {
-								r--
-							}
-						}
-					}
-					if e.Keysym.Scancode == sdl.SCANCODE_G {
-						if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-							if g < 254 {
-								g++
-							}
-						} else {
-							if g > 0 {
-								g--
-							}
-						}
-					}
-					if e.Keysym.Scancode == sdl.SCANCODE_B {
-						if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-							if b < 254 {
-								b++
-							}
-						} else {
-							if b > 0 {
-								b--
-							}
-						}
-					}
+				if vp.KeyboardHandler != nil {
+					vp.KeyboardHandler(vp, e)
+				}
+			case *sdl.MouseButtonEvent:
+				if vp.MouseButtonHandler != nil {
+					vp.MouseButtonHandler(e)
+				}
+			case *sdl.MouseMotionEvent:
+				if vp.MouseMotionHandler != nil {
+					vp.MouseMotionHandler(e)
+				}
+			case *sdl.MouseWheelEvent:
+				if vp.MouseWheelHandler != nil {
+					vp.MouseWheelHandler(e)
 				}
 			}
 		}
-		vp.mouse.Refresh()
-		vp.keyboard.Refresh()
 
 		vp.renderer.Clear()
 
@@ -110,6 +94,22 @@ func (vp *ViewPort) Run() {
 		vp.renderer.Present()
 		sdl.Delay(1)
 	}
+}
+
+// Destroy cleans u resources
+func (vp *ViewPort) Destroy() {
+	if vp.renderer != nil {
+		vp.renderer.Destroy()
+	}
+
+	if vp.window != nil {
+		vp.window.Destroy()
+	}
+}
+
+// Exit flags the run loop to exit ..
+func (vp *ViewPort) Exit() {
+	vp.running = false
 }
 
 // SetBackgroundColor sets the background color
