@@ -14,12 +14,64 @@ const (
 
 type state struct {
 	running         bool
+	ticks           uint32
 	backgroundColor sdl.Color
+	player1         *gfx.Asset
+	alien1          *gfx.Asset
 }
 
 // IsRunning returns true if the game is running
 func (s *state) IsRunning() bool {
 	return s.running
+}
+
+func main() {
+
+	vp, err := gfx.NewViewPort("Space Invaders", 50, 100, 600, 768)
+	if err != nil {
+		fmt.Printf("error creating window: %v", err)
+	}
+	defer vp.Destroy()
+
+	s := &state{
+		running:         true,
+		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
+		alien1:          nil,
+	}
+
+	vp.KeyboardHandler = s.keyb
+	vp.UpdateHandler = s.update
+	scale := calcScale(vp)
+
+	s.player1 = gfx.AssetFromBitmap(vp, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
+	s.player1.SetPos(50, 50, 0)
+	s.player1.SetScale(scale)
+	vp.AddAsset(s.player1)
+
+	s.alien1 = gfx.AssetFromBitmap(vp, alienSprCYA, alienSprCYB)
+	s.alien1.SetPos(10, 50, 0)
+	s.alien1.SetScale(scale)
+	vp.AddAsset(s.alien1)
+
+	vp.Run(s)
+}
+
+func (s *state) update(vp *gfx.ViewPort, ticks uint32) {
+	if ticks-s.ticks > 500 {
+		s.ticks = ticks
+
+		if s.alien1.CurrentIndex() == 1 {
+			s.alien1.SetCurrent(0)
+		} else {
+			s.alien1.SetCurrent(1)
+		}
+		if s.player1.CurrentIndex() >= 2 {
+			s.player1.SetCurrent(0)
+		} else {
+			s.player1.SetCurrent(s.player1.CurrentIndex() + 1)
+		}
+	}
+	vp.SetBackgroundColor(s.backgroundColor)
 }
 
 func (s *state) keyb(e *sdl.KeyboardEvent) {
@@ -63,34 +115,6 @@ func (s *state) keyb(e *sdl.KeyboardEvent) {
 			}
 		}
 	}
-}
-
-func (s *state) update(vp *gfx.ViewPort) {
-	vp.SetBackgroundColor(s.backgroundColor)
-}
-
-func main() {
-
-	vp, err := gfx.NewViewPort("Space Invaders", 50, 100, 1024, 768)
-	if err != nil {
-		fmt.Printf("error creating window: %v", err)
-	}
-	defer vp.Destroy()
-
-	s := &state{
-		running:         true,
-		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
-	}
-	vp.KeyboardHandler = s.keyb
-	vp.UpdateHandler = s.update
-	scale := calcScale(vp)
-
-	asset := gfx.AssetFromBitmap(vp, alienSprCYB, 16, 7)
-	asset.SetPos(50, 50, 0)
-	asset.SetScale(scale)
-	vp.AddAsset(asset)
-
-	vp.Run(s)
 }
 
 func calcScale(vp *gfx.ViewPort) float32 {

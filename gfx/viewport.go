@@ -87,7 +87,7 @@ func (vp *ViewPort) Run(state State) {
 
 		vp.renderer.Clear()
 		if vp.UpdateHandler != nil {
-			vp.UpdateHandler(vp)
+			vp.UpdateHandler(vp, sdl.GetTicks())
 		}
 
 		vp.DrawAssets()
@@ -144,21 +144,6 @@ func (vp *ViewPort) NewSinglePixelTexture(r, g, b, a uint8) (*sdl.Texture, error
 	return tex, nil
 }
 
-// DrawAsset ..
-func (vp *ViewPort) DrawAssets() {
-	for _, asset := range vp.Assets {
-		tex := asset.Texture()
-		_, _, w, h, _ := tex.Query()
-		dstRect := sdl.Rect{
-			X: asset.pos.X,
-			Y: asset.pos.Y,
-			W: int32(float32(w) * asset.Scale()),
-			H: int32(float32(h) * asset.Scale()),
-		}
-		vp.renderer.Copy(tex, nil, &dstRect)
-	}
-}
-
 // AddAsset adds an asset
 func (vp *ViewPort) AddAsset(asset *Asset) {
 	vp.Assets = append(vp.Assets, asset)
@@ -168,4 +153,19 @@ func (vp *ViewPort) AddAsset(asset *Asset) {
 func (vp *ViewPort) WindowSize() (w, h int32) {
 	w, h = vp.window.GetSize()
 	return
+}
+
+// DrawAssets draws the supplied assets into the specified ViewPort
+func (vp *ViewPort) DrawAssets() {
+	for _, asset := range vp.Assets {
+		_, _, w, h, _ := asset.Texture().Query()
+		x, y, _ := asset.Pos()
+		dstRect := sdl.Rect{
+			X: x,
+			Y: y,
+			W: int32(float32(w) * asset.Scale()),
+			H: int32(float32(h) * asset.Scale()),
+		}
+		vp.renderer.Copy(asset.Texture(), nil, &dstRect)
+	}
 }

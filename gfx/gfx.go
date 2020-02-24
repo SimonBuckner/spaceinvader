@@ -6,9 +6,22 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
+type Drawable interface {
+	Texture() *sdl.Texture
+	Pos() (x, y, z int32)
+	Scale() float32
+}
+
 // Pos represents the position of an item
 type Pos struct {
 	X, Y, Z int32
+}
+
+// Bitmap reqpresents a basic bitmap
+type Bitmap struct {
+	Width  int
+	Height int
+	Pixels []int
 }
 
 func init() {
@@ -40,7 +53,7 @@ type MouseMotionHandler func(event *sdl.MouseMotionEvent)
 type MouseWheelHandler func(event *sdl.MouseWheelEvent)
 
 // UpdateHandler is called once each game loop to update game assets before rendering
-type UpdateHandler func(vp *ViewPort)
+type UpdateHandler func(vp *ViewPort, ticks uint32)
 
 // State represents the current state of the game
 type State interface {
