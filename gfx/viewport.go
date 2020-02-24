@@ -86,7 +86,7 @@ func (vp *ViewPort) Run(state State) {
 		}
 
 		vp.renderer.Clear()
-		if vp.UpdateHandler != nil {
+		if state.IsRunning() && vp.UpdateHandler != nil {
 			vp.UpdateHandler(vp, sdl.GetTicks())
 		}
 
@@ -158,14 +158,17 @@ func (vp *ViewPort) WindowSize() (w, h int32) {
 // DrawAssets draws the supplied assets into the specified ViewPort
 func (vp *ViewPort) DrawAssets() {
 	for _, asset := range vp.Assets {
-		_, _, w, h, _ := asset.Texture().Query()
-		x, y, _ := asset.Pos()
-		dstRect := sdl.Rect{
-			X: x,
-			Y: y,
-			W: int32(float32(w) * asset.Scale()),
-			H: int32(float32(h) * asset.Scale()),
+		if asset.IsVisible() {
+			texture := asset.Texture()
+			_, _, w, h, _ := texture.Query()
+			x, y, _ := asset.Pos()
+			dstRect := sdl.Rect{
+				X: x,
+				Y: y,
+				W: int32(float32(w) * asset.Scale()),
+				H: int32(float32(h) * asset.Scale()),
+			}
+			vp.renderer.Copy(texture, nil, &dstRect)
 		}
-		vp.renderer.Copy(asset.Texture(), nil, &dstRect)
 	}
 }

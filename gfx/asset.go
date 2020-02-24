@@ -1,6 +1,8 @@
 package gfx
 
-import "github.com/veandco/go-sdl2/sdl"
+import (
+	"github.com/veandco/go-sdl2/sdl"
+)
 
 // Asset represents an on-screen asset
 type Asset struct {
@@ -8,6 +10,7 @@ type Asset struct {
 	w, h     int
 	scale    float32
 	index    int
+	visible  bool
 	vp       *ViewPort
 	textures []*sdl.Texture
 }
@@ -25,29 +28,30 @@ func AssetFromBitmap(vp *ViewPort, bitmaps ...Bitmap) *Asset {
 		textures: make([]*sdl.Texture, len(bitmaps)),
 	}
 
-	for bmIndex, bm := range bitmaps {
+	for i := 0; i < len(bitmaps); i++ {
+		bm := bitmaps[i]
 		pixels := make([]byte, bm.Width*bm.Height*4)
 		w := int32(bm.Width)
 		h := int32(bm.Height)
 
-		i := 0
+		j := 0
 		for _, pixel := range bm.Pixels {
-			if i >= len(pixels) {
+			if j >= len(pixels) {
 				break
 			}
 			rgba := HexColorToRGBA(pixel)
-			pixels[i] = rgba.R
-			i++
-			pixels[i] = rgba.G
-			i++
-			pixels[i] = rgba.B
-			i++
-			pixels[i] = rgba.A
-			i++
+			pixels[j] = rgba.R
+			j++
+			pixels[j] = rgba.G
+			j++
+			pixels[j] = rgba.B
+			j++
+			pixels[j] = rgba.A
+			j++
 		}
-
-		asset.textures[bmIndex], _ = vp.renderer.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, w, h)
-		asset.textures[bmIndex].Update(nil, pixels, 4*bm.Width)
+		tex, _ := vp.renderer.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, w, h)
+		tex.Update(nil, pixels, 4*bm.Width)
+		asset.textures[i] = tex
 	}
 	return asset
 }
@@ -91,4 +95,19 @@ func (a *Asset) SetCurrent(index int) {
 		return
 	}
 	a.index = index
+}
+
+// IsVisible returns true if the asset should be visible on the screen
+func (a *Asset) IsVisible() bool {
+	return a.visible
+}
+
+// Show sets the asset to be visible on the screen
+func (a *Asset) Show() {
+	a.visible = true
+}
+
+// Hide set the asset to be hidden on the screen
+func (a *Asset) Hide() {
+	a.visible = false
 }

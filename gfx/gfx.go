@@ -10,6 +10,7 @@ type Drawable interface {
 	Texture() *sdl.Texture
 	Pos() (x, y, z int32)
 	Scale() float32
+	IsVisible() bool
 }
 
 // Pos represents the position of an item
