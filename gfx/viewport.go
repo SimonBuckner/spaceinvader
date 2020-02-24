@@ -47,7 +47,7 @@ func NewViewPort(title string, top, left, width, height int) (*ViewPort, error) 
 		vp.renderer = renderer
 	}
 
-	vp.Assets = make([]*Asset, 0)
+	// vp.Assets = make([]*Asset, 0)
 
 	return vp, nil
 }
@@ -152,8 +152,8 @@ func (vp *ViewPort) DrawAssets() {
 		dstRect := sdl.Rect{
 			X: asset.pos.X,
 			Y: asset.pos.Y,
-			W: w,
-			H: h,
+			W: int32(float32(w) * asset.Scale()),
+			H: int32(float32(h) * asset.Scale()),
 		}
 		vp.renderer.Copy(tex, nil, &dstRect)
 	}
@@ -162,4 +162,10 @@ func (vp *ViewPort) DrawAssets() {
 // AddAsset adds an asset
 func (vp *ViewPort) AddAsset(asset *Asset) {
 	vp.Assets = append(vp.Assets, asset)
+}
+
+// WindowSize returns the width and height of the window
+func (vp *ViewPort) WindowSize() (w, h int32) {
+	w, h = vp.window.GetSize()
+	return
 }

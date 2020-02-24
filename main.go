@@ -7,6 +7,11 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const (
+	originalWidth  = 224
+	originalHeight = 256
+)
+
 type state struct {
 	running         bool
 	backgroundColor sdl.Color
@@ -22,7 +27,6 @@ func (s *state) keyb(e *sdl.KeyboardEvent) {
 	if e.Type == sdl.KEYUP {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_Q:
-			fmt.Println("Q")
 			s.running = false
 		}
 		if e.Keysym.Scancode == sdl.SCANCODE_R {
@@ -79,10 +83,26 @@ func main() {
 	}
 	vp.KeyboardHandler = s.keyb
 	vp.UpdateHandler = s.update
+	scale := calcScale(vp)
 
 	asset := gfx.AssetFromBitmap(vp, alienSprCYB, 16, 7)
 	asset.SetPos(50, 50, 0)
-
+	asset.SetScale(scale)
 	vp.AddAsset(asset)
+
 	vp.Run(s)
+}
+
+func calcScale(vp *gfx.ViewPort) float32 {
+
+	w, h := vp.WindowSize()
+
+	rW := float32(w / originalWidth)
+	rH := float32(h / originalHeight)
+
+	if rW > rH {
+		return rH
+	} else {
+		return rW
+	}
 }
