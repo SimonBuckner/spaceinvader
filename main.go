@@ -187,7 +187,6 @@ func calcScale(vp *gfx.ViewPort) float32 {
 
 	if rW > rH {
 		return rH
-	} else {
-		return rW
 	}
+	return rW
 }

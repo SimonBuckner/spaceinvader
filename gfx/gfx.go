@@ -1,6 +1,8 @@
 package gfx
 
 import (
+	"fmt"
+
 	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -28,7 +30,7 @@ type Pos struct {
 
 // Bitmap reqpresents a basic bitmap
 type Bitmap struct {
-	Width             int
+	Pitch             int
 	Transparency      bool
 	Pixels            []int
 	TransparentColour sdl.Color
@@ -84,4 +86,59 @@ func HexColorToRGBA(color int) *sdl.Color {
 		B: b,
 		A: a,
 	}
+}
+
+// BitmapAtlas represents an array of bitmap addressable by a key
+type BitmapAtlas struct {
+	Bitmap
+	Key        map[rune]AtlasCoord
+	TileWidth  int
+	TileHeight int
+}
+
+// AtlasCoord indicates the location in bitmap/texture atlas
+type AtlasCoord struct {
+	X, Y int
+}
+
+// GetKeys returns a []rune of keys in the atlas
+func (ba *BitmapAtlas) GetKeys() []rune {
+	keys := make([]rune, len(ba.Key))
+	i := 0
+	for k := range ba.Key {
+		keys[i] = k
+	}
+	return keys
+}
+
+// GetTile returns the bitmap tile for key speified
+func (ba *BitmapAtlas) GetTile(key rune) (*Bitmap, error) {
+	coord, ok := ba.Key[key]
+	if !ok {
+		return nil, keyNotFoundError(key)
+	}
+	tile := &Bitmap{
+		Pitch:             ba.TileWidth,
+		Transparency:      ba.Bitmap.Transparency,
+		TransparentColour: ba.Bitmap.TransparentColour,
+		Pixels:            make([]int, ba.TileWidth*ba.TileHeight),
+	}
+
+	i := 0
+	rowStart := ((coord.Y * ba.TileHeight) * ba.Pitch) + (coord.X * ba.TileWidth)
+	for y := 0; y < ba.TileHeight; y++ {
+		j := rowStart
+		for x := 0; x < ba.TileWidth; x++ {
+			tile.Pixels[i] = ba.Bitmap.Pixels[j]
+			i++
+			j++
+		}
+		rowStart = rowStart + ba.Pitch
+	}
+
+	return tile, nil
+}
+
+func keyNotFoundError(key rune) error {
+	return fmt.Errorf("key '%v'not found in Altas", key)
 }

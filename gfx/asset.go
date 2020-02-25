@@ -12,6 +12,7 @@ type Asset struct {
 	index    int
 	visible  bool
 	vp       *ViewPort
+	surfaces []*sdl.Surface
 	textures []*sdl.Texture
 }
 
@@ -35,7 +36,7 @@ func SurfaceFromBitMap(bitmaps ...Bitmap) []*sdl.Surface {
 		tc := bm.TransparentColour
 		ck := sdl.MapRGBA(&pf, tc.R, tc.G, tc.B, tc.A)
 
-		w := int32(bm.Width)
+		w := int32(bm.Pitch)
 		h := int32(len(bm.Pixels)) / w
 
 		surface, _ := sdl.CreateRGBSurface(0, w, h, 32, rMask, gMask, bMask, aMask)
@@ -76,14 +77,16 @@ func AssetFromBitmap(vp *ViewPort, bitmaps ...Bitmap) *Asset {
 		scale:    1.0,
 		index:    0,
 		vp:       vp,
+		surfaces: make([]*sdl.Surface, len(bitmaps)),
 		textures: make([]*sdl.Texture, len(bitmaps)),
 	}
 
 	surfaces := SurfaceFromBitMap(bitmaps...)
-	for i := 0; i < len(surfaces); i++ {
-		tex, _ := vp.renderer.CreateTextureFromSurface(surfaces[i])
-		bm, _ := surfaces[i].GetBlendMode()
+	for i, surf := range surfaces {
+		tex, _ := vp.renderer.CreateTextureFromSurface(surf)
+		bm, _ := surf.GetBlendMode()
 		tex.SetBlendMode(bm)
+		asset.surfaces[i] = surf
 		asset.textures[i] = tex
 	}
 	return asset
