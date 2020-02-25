@@ -81,11 +81,11 @@ func resetAlienGrid(vp *gfx.ViewPort, scale float32) []*gfx.Asset {
 			var alien *gfx.Asset
 			switch row {
 			case 0, 1:
-				alien = gfx.AssetFromBitmap(vp, alienSprC0, alienSprC1)
+				alien = gfx.AssetFromBitmap(vp, alienSprC0, alienSprC1, alienExplode)
 			case 2, 3:
-				alien = gfx.AssetFromBitmap(vp, alienSprB0, alienSprB1)
+				alien = gfx.AssetFromBitmap(vp, alienSprB0, alienSprB1, alienExplode)
 			case 4:
-				alien = gfx.AssetFromBitmap(vp, alienSprA0, alienSprA1)
+				alien = gfx.AssetFromBitmap(vp, alienSprA0, alienSprA1, alienExplode)
 			}
 			alien.SetPos(x, y, 0)
 			alien.SetScale(scale)
@@ -98,6 +98,7 @@ func resetAlienGrid(vp *gfx.ViewPort, scale float32) []*gfx.Asset {
 }
 
 func (s *state) update(vp *gfx.ViewPort, ticks uint32) {
+	vp.SetBackgroundColor(s.backgroundColor)
 	if ticks-s.ticks > 500 {
 		s.ticks = ticks
 		for _, player := range s.players {
@@ -106,10 +107,10 @@ func (s *state) update(vp *gfx.ViewPort, ticks uint32) {
 			for _, alien := range player.aliens {
 				if visible {
 					alien.Show()
-					if alien.CurrentIndex() == 1 {
+					if alien.CurrentIndex() >= 2 {
 						alien.SetCurrent(0)
 					} else {
-						alien.SetCurrent(1)
+						alien.SetCurrent(alien.CurrentIndex() + 1)
 					}
 				} else {
 					alien.Hide()
@@ -128,7 +129,7 @@ func (s *state) update(vp *gfx.ViewPort, ticks uint32) {
 			}
 		}
 	}
-	vp.SetBackgroundColor(s.backgroundColor)
+
 }
 
 func (s *state) keyb(e *sdl.KeyboardEvent) {

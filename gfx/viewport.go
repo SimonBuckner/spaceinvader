@@ -130,7 +130,8 @@ func (vp *ViewPort) HasBoth() bool {
 
 // NewSinglePixelTexture returns a new texture comprising a single pixel
 func (vp *ViewPort) NewSinglePixelTexture(r, g, b, a uint8) (*sdl.Texture, error) {
-	tex, err := vp.renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STATIC, 1, 1)
+	tex, err := vp.renderer.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, 1, 1)
+	tex.SetBlendMode(sdl.BLENDMODE_ADD)
 	if err != nil {
 		return nil, err
 	}

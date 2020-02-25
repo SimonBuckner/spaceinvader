@@ -6,6 +6,14 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
+const (
+	rMask = 0xFF000000
+	gMask = 0x00FF0000
+	bMask = 0x0000FF00
+	aMask = 0x000000FF
+)
+
+// Drawable represents nd object that can be drawn by a renderer
 type Drawable interface {
 	Texture() *sdl.Texture
 	Pos() (x, y, z int32)
@@ -20,9 +28,10 @@ type Pos struct {
 
 // Bitmap reqpresents a basic bitmap
 type Bitmap struct {
-	Width  int
-	Height int
-	Pixels []int
+	Width             int
+	Transparency      bool
+	Pixels            []int
+	TransparentColour sdl.Color
 }
 
 func init() {
@@ -61,14 +70,14 @@ type State interface {
 	IsRunning() bool
 }
 
-// HexColorToRGB converts a colour stored in an int to RGBA values
+// HexColorToRGBA converts a colour stored in an int to RGBA values
 func HexColorToRGBA(color int) *sdl.Color {
 
-	r := uint8((color & 0b11111111000000000000000000000000) >> 24)
-	g := uint8((color & 0b00000000111111110000000000000000) >> 16)
-	b := uint8((color & 0b00000000000000001111111100000000) >> 8)
-	a := uint8(color & 0b00000000000000000000000011111111)
-
+	r := uint8((color & rMask) >> 24)
+	g := uint8((color & gMask) >> 16)
+	b := uint8((color & bMask) >> 8)
+	a := uint8(color & aMask)
+	// fmt.Printf("R:%2x G: %2x B: %2x A: %2x\n", r, g, b, a)
 	return &sdl.Color{
 		R: r,
 		G: g,

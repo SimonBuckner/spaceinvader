@@ -1,6 +1,8 @@
 package gfx
 
 import (
+	"fmt"
+
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -17,23 +19,34 @@ type Asset struct {
 
 var _ Drawable = &Asset{}
 
-// AssetFromBitmap converts and array of integer color values into a texture of the specified width.
-func AssetFromBitmap(vp *ViewPort, bitmaps ...Bitmap) *Asset {
-
-	asset := &Asset{
-		pos:      Pos{},
-		scale:    1.0,
-		index:    0,
-		vp:       vp,
-		textures: make([]*sdl.Texture, len(bitmaps)),
+// SurfaceFromBitMap returns an array of surfaces from the bitmap data
+func SurfaceFromBitMap(bitmaps ...Bitmap) []*sdl.Surface {
+	pf := sdl.PixelFormat{
+		Format:        sdl.PIXELFORMAT_RGBA8888,
+		Palette:       nil,
+		BitsPerPixel:  32,
+		BytesPerPixel: 4,
+		Rmask:         rMask,
+		Gmask:         gMask,
+		Bmask:         bMask,
+		Amask:         aMask,
 	}
-
+	surfaces := make([]*sdl.Surface, len(bitmaps))
 	for i := 0; i < len(bitmaps); i++ {
 		bm := bitmaps[i]
-		pixels := make([]byte, bm.Width*bm.Height*4)
-		w := int32(bm.Width)
-		h := int32(bm.Height)
+		tc := bm.TransparentColour
+		ck := sdl.MapRGBA(&pf, tc.R, tc.G, tc.B, tc.A)
 
+		w := int32(bm.Width)
+		h := int32(len(bm.Pixels)) / w
+
+		surface, err := sdl.CreateRGBSurface(0, w, h, 32, rMask, gMask, bMask, aMask)
+		if err != nil {
+			fmt.Println("surface from pixels")
+			panic(err)
+		}
+		surface.Lock()
+		pixels := surface.Pixels()
 		j := 0
 		for _, pixel := range bm.Pixels {
 			if j >= len(pixels) {
@@ -49,8 +62,32 @@ func AssetFromBitmap(vp *ViewPort, bitmaps ...Bitmap) *Asset {
 			pixels[j] = rgba.A
 			j++
 		}
-		tex, _ := vp.renderer.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, w, h)
-		tex.Update(nil, pixels, 4*bm.Width)
+		surface.Unlock()
+		surface.SetColorKey(bm.Transparency, ck)
+		surfaces[i] = surface
+	}
+	return surfaces
+}
+
+// AssetFromBitmap converts and array of integer color values into a texture of the specified width.
+func AssetFromBitmap(vp *ViewPort, bitmaps ...Bitmap) *Asset {
+
+	asset := &Asset{
+		pos:      Pos{},
+		scale:    1.0,
+		index:    0,
+		vp:       vp,
+		textures: make([]*sdl.Texture, len(bitmaps)),
+	}
+
+	surfaces := SurfaceFromBitMap(bitmaps...)
+	for i := 0; i < len(surfaces); i++ {
+		tex, err := vp.renderer.CreateTextureFromSurface(surfaces[i])
+		if err != nil {
+			fmt.Println("texture from surface")
+			panic(err)
+		}
+		tex.SetBlendMode(sdl.BLENDMODE_BLEND)
 		asset.textures[i] = tex
 	}
 	return asset
