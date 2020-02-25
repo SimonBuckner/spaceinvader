@@ -1,8 +1,6 @@
 package gfx
 
 import (
-	"fmt"
-
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -40,11 +38,7 @@ func SurfaceFromBitMap(bitmaps ...Bitmap) []*sdl.Surface {
 		w := int32(bm.Width)
 		h := int32(len(bm.Pixels)) / w
 
-		surface, err := sdl.CreateRGBSurface(0, w, h, 32, rMask, gMask, bMask, aMask)
-		if err != nil {
-			fmt.Println("surface from pixels")
-			panic(err)
-		}
+		surface, _ := sdl.CreateRGBSurface(0, w, h, 32, rMask, gMask, bMask, aMask)
 		surface.Lock()
 		pixels := surface.Pixels()
 		j := 0
@@ -63,7 +57,12 @@ func SurfaceFromBitMap(bitmaps ...Bitmap) []*sdl.Surface {
 			j++
 		}
 		surface.Unlock()
-		surface.SetColorKey(bm.Transparency, ck)
+		if bm.Transparency {
+			surface.SetColorKey(true, ck)
+			surface.SetBlendMode(sdl.BLENDMODE_BLEND)
+		} else {
+			surface.SetBlendMode(sdl.BLENDMODE_NONE)
+		}
 		surfaces[i] = surface
 	}
 	return surfaces
@@ -82,12 +81,9 @@ func AssetFromBitmap(vp *ViewPort, bitmaps ...Bitmap) *Asset {
 
 	surfaces := SurfaceFromBitMap(bitmaps...)
 	for i := 0; i < len(surfaces); i++ {
-		tex, err := vp.renderer.CreateTextureFromSurface(surfaces[i])
-		if err != nil {
-			fmt.Println("texture from surface")
-			panic(err)
-		}
-		tex.SetBlendMode(sdl.BLENDMODE_BLEND)
+		tex, _ := vp.renderer.CreateTextureFromSurface(surfaces[i])
+		bm, _ := surfaces[i].GetBlendMode()
+		tex.SetBlendMode(bm)
 		asset.textures[i] = tex
 	}
 	return asset

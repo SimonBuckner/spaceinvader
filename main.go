@@ -138,8 +138,13 @@ func (s *state) keyb(e *sdl.KeyboardEvent) {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_Q:
 			s.running = false
+			return
 		}
-		if e.Keysym.Scancode == sdl.SCANCODE_R {
+
+	}
+	if e.Type == sdl.KEYDOWN {
+		switch e.Keysym.Scancode {
+		case sdl.SCANCODE_R:
 			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
 				if s.backgroundColor.R < 254 {
 					s.backgroundColor.R++
@@ -149,8 +154,7 @@ func (s *state) keyb(e *sdl.KeyboardEvent) {
 					s.backgroundColor.R--
 				}
 			}
-		}
-		if e.Keysym.Scancode == sdl.SCANCODE_G {
+		case sdl.SCANCODE_G:
 			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
 				if s.backgroundColor.G < 254 {
 					s.backgroundColor.G++
@@ -160,8 +164,7 @@ func (s *state) keyb(e *sdl.KeyboardEvent) {
 					s.backgroundColor.G--
 				}
 			}
-		}
-		if e.Keysym.Scancode == sdl.SCANCODE_B {
+		case sdl.SCANCODE_B:
 			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
 				if s.backgroundColor.B < 254 {
 					s.backgroundColor.B++
