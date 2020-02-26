@@ -173,3 +173,8 @@ func (vp *ViewPort) DrawAssets() {
 		}
 	}
 }
+
+// Renderer gets the viewport renderer
+func (vp *ViewPort) Renderer() *sdl.Renderer {
+	return vp.renderer
+}
