@@ -20,7 +20,8 @@ const (
 )
 
 type state struct {
-	running         bool
+	*gfx.StateControl
+	// running         bool
 	ticks           uint32
 	scale           float32
 	backgroundColor sdl.Color
@@ -34,12 +35,7 @@ type playerState struct {
 	lives  int
 	score  int
 	ship   *gfx.Asset
-	aliens []*gfx.Asset
-}
-
-// IsRunning returns true if the game is running
-func (s *state) IsRunning() bool {
-	return s.running
+	aliens []*enemyShip
 }
 
 func main() {
@@ -50,26 +46,26 @@ func main() {
 	}
 	defer vp.Destroy()
 
-	s := &state{
-		running:         true,
+	state := &state{
+		StateControl:    gfx.NewGlobalState(),
 		vp:              vp,
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
 	}
 
-	vp.KeyboardHandler = s.keyb
-	vp.UpdateHandler = s.update
-	s.scale = calcScale(vp)
-	s.players = make([]*playerState, 2)
+	state.SetKeyboardEvent(state.keyb)
+	state.SetUpdateEvent(state.update)
+	state.scale = calcScale(vp)
+	state.players = make([]*playerState, 2)
 	for p := 0; p < 2; p++ {
-		ps := resetPlayer(vp, s.scale)
+		ps := resetPlayer(vp, state.scale)
 		ps.ship.Name = "Player " + strconv.Itoa(p+1)
-		ps.aliens = resetAlienGrid(vp, s.scale)
-		s.players[p] = ps
+		ps.aliens = resetAlienGrid(state)
+		state.players[p] = ps
 	}
-	s.currentPlayer = s.players[0]
-	s.alphabet = resetAlphabet(vp, s.scale)
+	state.currentPlayer = state.players[0]
+	state.alphabet = resetAlphabet(vp, state.scale)
 	fmt.Println("Finished loading assets")
-	vp.Run(s)
+	vp.Run(state)
 }
 
 func resetPlayer(vp *gfx.ViewPort, scale float32) *playerState {
@@ -91,41 +87,30 @@ func resetPlayer(vp *gfx.ViewPort, scale float32) *playerState {
 	return ps
 }
 
-func resetAlienGrid(vp *gfx.ViewPort, scale float32) []*gfx.Asset {
+func resetAlienGrid(s *state) []*enemyShip {
 	fmt.Println("resetAlienGrid")
 	rows := 5
 	cols := 11
-	aliens := make([]*gfx.Asset, rows*cols)
+	aliens := make([]*enemyShip, rows*cols)
 	i := 0
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
-			var alien *gfx.Asset
+			var class enemyClass
 			switch row {
 			case 0, 1:
-				if a, err := gfx.AssetFromBitmaps(vp, alienSprC0, alienSprC1, alienExplode); err != nil {
-					panic(err)
-				} else {
-					a.Name = "AlienC" + strconv.Itoa(i)
-					alien = a
-				}
+				class = enemyClassC
 			case 2, 3:
-				if a, err := gfx.AssetFromBitmaps(vp, alienSprB0, alienSprB1, alienExplode); err != nil {
-					panic(err)
-				} else {
-					a.Name = "AlienB" + strconv.Itoa(i)
-					alien = a
-				}
+				class = enemyClassB
 			case 4:
-				if a, err := gfx.AssetFromBitmaps(vp, alienSprA0, alienSprA1, alienExplode); err != nil {
-					panic(err)
-				} else {
-					a.Name = "AlienA" + strconv.Itoa(i)
-					alien = a
-				}
+				class = enemyClassA
 			}
-			alien.SetScale(scale)
-			aliens[i] = alien
-			vp.AddAsset(alien)
+			a, err := newAlien(s, class)
+			if err != nil {
+
+			}
+			a.SetScale(s.scale)
+			aliens[i] = a
+			s.vp.AddAsset(a.Asset)
 			i++
 		}
 	}
@@ -147,7 +132,8 @@ func resetAlphabet(vp *gfx.ViewPort, scale float32) *gfx.AssetMap {
 	return atlas
 }
 
-func (s *state) update(vp *gfx.ViewPort, ticks uint32) {
+func (s *state) update(ticks uint32) {
+	vp := s.vp
 	vp.SetBackgroundColor(s.backgroundColor)
 
 	gridSize := 20 * s.scale
@@ -207,7 +193,7 @@ func (s *state) keyb(e *sdl.KeyboardEvent) {
 	if e.Type == sdl.KEYUP {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_Q:
-			s.running = false
+			s.Quit()
 			return
 		case sdl.SCANCODE_D:
 			s.dumpAssetNames()

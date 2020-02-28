@@ -1,6 +1,8 @@
 package gfx
 
 import (
+	"fmt"
+
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -13,12 +15,7 @@ type ViewPort struct {
 	height   int32
 	window   *sdl.Window
 	renderer *sdl.Renderer
-	KeyboardHandler
-	MouseButtonHandler
-	MouseMotionHandler
-	MouseWheelHandler
-	UpdateHandler
-	Assets []*Asset
+	Assets   []*Asset
 }
 
 // NewViewPort factory
@@ -53,9 +50,10 @@ func NewViewPort(title string, top, left, width, height int) (*ViewPort, error) 
 }
 
 // Run the main event loop for the ViewPort..
-func (vp *ViewPort) Run(state State) {
+func (vp *ViewPort) Run(state StateController) {
 	for {
-		if !state.IsRunning() {
+		if state.Running() == false {
+			fmt.Println("Quit event")
 			return
 		}
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -67,28 +65,20 @@ func (vp *ViewPort) Run(state State) {
 					return
 				}
 			case *sdl.KeyboardEvent:
-				if vp.KeyboardHandler != nil {
-					vp.KeyboardHandler(e)
-				}
+				state.KeyboardEvent(e)
 			case *sdl.MouseButtonEvent:
-				if vp.MouseButtonHandler != nil {
-					vp.MouseButtonHandler(e)
-				}
+				state.MouseButtonEvent(e)
 			case *sdl.MouseMotionEvent:
-				if vp.MouseMotionHandler != nil {
-					vp.MouseMotionHandler(e)
-				}
+				state.MouseMotionEvent(e)
 			case *sdl.MouseWheelEvent:
-				if vp.MouseWheelHandler != nil {
-					vp.MouseWheelHandler(e)
-				}
+				state.MouseWheelEvent(e)
 			}
 		}
 
 		vp.renderer.Clear()
-		if state.IsRunning() && vp.UpdateHandler != nil {
-			vp.UpdateHandler(vp, sdl.GetTicks())
-		}
+		// if state.IsRunning() && vp.UpdateHandler != nil {
+		state.UpdateEvent(sdl.GetTicks())
+		// }
 
 		vp.DrawAssets()
 
