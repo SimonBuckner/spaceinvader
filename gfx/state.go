@@ -1,29 +1,15 @@
 package gfx
 
 import (
+	"fmt"
+
 	"github.com/veandco/go-sdl2/sdl"
 )
-
-// KeyboardHandler registers a function to handle keyboard event
-type KeyboardHandler func(e *sdl.KeyboardEvent)
-
-// MouseButtonHandler is called each time a mouse button event is triggered
-type MouseButtonHandler func(event *sdl.MouseButtonEvent)
-
-// MouseMotionHandler is called each time a mouse motion event is triggered
-type MouseMotionHandler func(event *sdl.MouseMotionEvent)
-
-// MouseWheelHandler is called each time a mouse wheel event is triggered
-type MouseWheelHandler func(event *sdl.MouseWheelEvent)
-
-// UpdateHandler is called once each game loop to update game assets before rendering
-type UpdateHandler func(vp *ViewPort, ticks uint32)
 
 // StateController defines the methods of the game state controller
 type StateController interface {
 	Running() bool
 	Quit()
-	// KeyboardEvent handles keyboard events
 	KeyboardEvent(e *sdl.KeyboardEvent)
 	MouseButtonEvent(e *sdl.MouseButtonEvent)
 	MouseMotionEvent(e *sdl.MouseMotionEvent)
@@ -34,8 +20,8 @@ type StateController interface {
 // StateControl controls the state of the game
 type StateControl struct {
 	running bool
-	// states  []*State
-	// current *State
+	states  []*State
+	current *State
 
 	keyboardEvent    func(e *sdl.KeyboardEvent)
 	mouseButtonEvent func(e *sdl.MouseButtonEvent)
@@ -44,8 +30,22 @@ type StateControl struct {
 	updateEvent      func(ticks uint32)
 }
 
-// NewGlobalState factory
-func NewGlobalState() *StateControl {
+// StateName indicates a state in a game
+type StateName string
+
+// State represents a specific state in a game
+type State struct {
+	name             StateName
+	sc               *StateControl
+	keyboardEvent    func(e *sdl.KeyboardEvent)
+	mouseButtonEvent func(e *sdl.MouseButtonEvent)
+	mouseMotionEvent func(e *sdl.MouseMotionEvent)
+	mouseWheelEvent  func(e *sdl.MouseWheelEvent)
+	updateEvent      func(ticks uint32)
+}
+
+// NewStateControl factory
+func NewStateControl() *StateControl {
 	return &StateControl{
 		running: true,
 		// states:  make([]*State, 0),
@@ -122,42 +122,28 @@ func (sc *StateControl) UpdateEvent(ticks uint32) {
 	}
 }
 
-// AddState adds a state to the controller
-// func (sc *StateControl) AddState(state *State) error {
-// 	for _, s := range sc.states {
-// 		if s.name == state.name {
-// 			return fmt.Errorf("state %v already exists", state.ame)
-// 		}
-// 	}
-// 	sc.states = append(sc.states, state)
-// 	return nil
-// }
+// NewState creates a new state and adds a state to the controller
+func (sc *StateControl) NewState(name StateName) (*State, error) {
+	for _, s := range sc.states {
+		if s.name == name {
+			return nil, fmt.Errorf("state %v already exists", string(name))
+		}
+	}
+	state := &State{
+		name: name,
+		sc:   sc,
+	}
+	sc.states = append(sc.states, state)
+	return state, nil
+}
 
-// // Enter makes the named state the current one
-// func (sc *StateControl) Enter(stateName StateName) {
-// 	for _, s := range sc.states {
-// 		if s.name == stateName {
-// 			sc.current = s
-// 		}
-// 	}
-// }
-
-// StateName indicates a state in a game
-// type StateName string
-
-// // State represents a specific state in a game
-// type State struct {
-// 	name StateName
-// 	// keyboardHandler KeyboardHandler
-// 	// kouseButtonHandler KouseButtonHandler
-// 	// kouseMotionHandler
-// 	// kouseWheelHandler
-// 	// kpdateHandler
-// }
-
-// // NewState factory
-// func NewState(name StateName) *State {
-// 	return &State{
-// 		name: name,
-// 	}
-// }
+// EnterState makes the named state the current one
+func (sc *StateControl) EnterState(name StateName) error {
+	for _, s := range sc.states {
+		if s.name == name {
+			sc.current = s
+			return nil
+		}
+	}
+	return fmt.Errorf("Unable to finn the state %v", string(name))
+}

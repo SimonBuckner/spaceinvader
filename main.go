@@ -19,9 +19,8 @@ const (
 	originalHeight = 256
 )
 
-type state struct {
+type gameState struct {
 	*gfx.StateControl
-	// running         bool
 	ticks           uint32
 	scale           float32
 	backgroundColor sdl.Color
@@ -46,8 +45,8 @@ func main() {
 	}
 	defer vp.Destroy()
 
-	state := &state{
-		StateControl:    gfx.NewGlobalState(),
+	state := &gameState{
+		StateControl:    gfx.NewStateControl(),
 		vp:              vp,
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
 	}
@@ -87,7 +86,7 @@ func resetPlayer(vp *gfx.ViewPort, scale float32) *playerState {
 	return ps
 }
 
-func resetAlienGrid(s *state) []*enemyShip {
+func resetAlienGrid(gs *gameState) []*enemyShip {
 	fmt.Println("resetAlienGrid")
 	rows := 5
 	cols := 11
@@ -104,13 +103,13 @@ func resetAlienGrid(s *state) []*enemyShip {
 			case 4:
 				class = enemyClassA
 			}
-			a, err := newAlien(s, class)
+			a, err := newAlien(gs, class)
 			if err != nil {
 
 			}
-			a.SetScale(s.scale)
+			a.SetScale(gs.scale)
 			aliens[i] = a
-			s.vp.AddAsset(a.Asset)
+			gs.vp.AddAsset(a.Asset)
 			i++
 		}
 	}
@@ -132,11 +131,11 @@ func resetAlphabet(vp *gfx.ViewPort, scale float32) *gfx.AssetMap {
 	return atlas
 }
 
-func (s *state) update(ticks uint32) {
-	vp := s.vp
-	vp.SetBackgroundColor(s.backgroundColor)
+func (gs *gameState) update(ticks uint32) {
+	vp := gs.vp
+	vp.SetBackgroundColor(gs.backgroundColor)
 
-	gridSize := 20 * s.scale
+	gridSize := 20 * gs.scale
 	x := gridSize
 	y := gridSize
 	i := 0
@@ -152,10 +151,10 @@ func (s *state) update(ticks uint32) {
 		}
 	}
 
-	if ticks-s.ticks > 500 {
-		s.ticks = ticks
-		for _, player := range s.players {
-			visible := player == s.currentPlayer
+	if ticks-gs.ticks > 500 {
+		gs.ticks = ticks
+		for _, player := range gs.players {
+			visible := player == gs.currentPlayer
 
 			for _, alien := range player.aliens {
 				if alien == nil {
@@ -188,15 +187,15 @@ func (s *state) update(ticks uint32) {
 
 }
 
-func (s *state) keyb(e *sdl.KeyboardEvent) {
+func (gs *gameState) keyb(e *sdl.KeyboardEvent) {
 
 	if e.Type == sdl.KEYUP {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_Q:
-			s.Quit()
+			gs.Quit()
 			return
 		case sdl.SCANCODE_D:
-			s.dumpAssetNames()
+			gs.dumpAssetNames()
 		}
 
 	}
@@ -204,32 +203,32 @@ func (s *state) keyb(e *sdl.KeyboardEvent) {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_R:
 			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-				if s.backgroundColor.R < 254 {
-					s.backgroundColor.R++
+				if gs.backgroundColor.R < 254 {
+					gs.backgroundColor.R++
 				}
 			} else {
-				if s.backgroundColor.R > 0 {
-					s.backgroundColor.R--
+				if gs.backgroundColor.R > 0 {
+					gs.backgroundColor.R--
 				}
 			}
 		case sdl.SCANCODE_G:
 			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-				if s.backgroundColor.G < 254 {
-					s.backgroundColor.G++
+				if gs.backgroundColor.G < 254 {
+					gs.backgroundColor.G++
 				}
 			} else {
-				if s.backgroundColor.G > 0 {
-					s.backgroundColor.G--
+				if gs.backgroundColor.G > 0 {
+					gs.backgroundColor.G--
 				}
 			}
 		case sdl.SCANCODE_B:
 			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-				if s.backgroundColor.B < 254 {
-					s.backgroundColor.B++
+				if gs.backgroundColor.B < 254 {
+					gs.backgroundColor.B++
 				}
 			} else {
-				if s.backgroundColor.B > 0 {
-					s.backgroundColor.B--
+				if gs.backgroundColor.B > 0 {
+					gs.backgroundColor.B--
 				}
 			}
 		}
@@ -240,19 +239,19 @@ func calcScale(vp *gfx.ViewPort) float32 {
 
 	w, h := vp.WindowSize()
 
-	rW := float32(w / originalWidth)
-	rH := float32(h / originalHeight)
+	rW := int(w / originalWidth)
+	rH := int(h / originalHeight)
 
 	if rW > rH {
-		return rH
+		return float32(rH)
 	}
-	return rW
+	return float32(rW)
 }
 
-func (s *state) dumpAssetNames() {
+func (gs *gameState) dumpAssetNames() {
 	fmt.Println("index  name                     x     y visible")
 	fmt.Println("=====  ====================  ====  ==== =======")
-	for i, v := range s.vp.Assets {
+	for i, v := range gs.vp.Assets {
 		x, y, _ := v.Pos()
 		if v.IsVisible() {
 			fmt.Printf(" %3d   %-20v  %4d  %4d Yes\n", i, v.Name, x, y)
@@ -260,4 +259,12 @@ func (s *state) dumpAssetNames() {
 			fmt.Printf(" %3d   %-20v  %4d  %4d No\n", i, v.Name, x, y)
 		}
 	}
+}
+
+func (gs *gameState) convertXY(x, y int32) (int32, int32) {
+	w, h := gs.vp.WindowSize()
+
+	newX := (w - int32(originalWidth*gs.scale)) / 2
+	newY := (h - int32(originalHeight*gs.scale)) / 2
+	return newX, newY
 }

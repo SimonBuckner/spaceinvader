@@ -22,7 +22,7 @@ type enemyShip struct {
 	ttl  uint32
 }
 
-func newAlien(s *state, class enemyClass) (*enemyShip, error) {
+func newAlien(s *gameState, class enemyClass) (*enemyShip, error) {
 	ship := &enemyShip{
 		enemyClass: class,
 		hit:        false,
