@@ -50,9 +50,9 @@ func NewViewPort(title string, top, left, width, height int) (*ViewPort, error) 
 }
 
 // Run the main event loop for the ViewPort..
-func (vp *ViewPort) Run(state StateController) {
+func (vp *ViewPort) Run(director *Director) {
 	for {
-		if state.Running() == false {
+		if director.IsClosing() {
 			fmt.Println("Quit event")
 			return
 		}
@@ -65,23 +65,19 @@ func (vp *ViewPort) Run(state StateController) {
 					return
 				}
 			case *sdl.KeyboardEvent:
-				state.KeyboardEvent(e)
+				director.KeyboardEvent(e)
 			case *sdl.MouseButtonEvent:
-				state.MouseButtonEvent(e)
+				// director.MouseButtonEvent(e)
 			case *sdl.MouseMotionEvent:
-				state.MouseMotionEvent(e)
+				// director.MouseMotionEvent(e)
 			case *sdl.MouseWheelEvent:
-				state.MouseWheelEvent(e)
+				// director.MouseWheelEvent(e)
 			}
 		}
 
 		vp.renderer.Clear()
-		// if state.IsRunning() && vp.UpdateHandler != nil {
-		state.UpdateEvent(sdl.GetTicks())
-		// }
-
+		director.UpdateEvent(sdl.GetTicks())
 		vp.DrawAssets()
-
 		vp.renderer.Present()
 		sdl.Delay(1)
 	}
@@ -140,6 +136,20 @@ func (vp *ViewPort) AddAsset(asset *Asset) {
 	vp.Assets = append(vp.Assets, asset)
 }
 
+// RemoveAsset removes a screen asset from the render queue
+func (vp *ViewPort) RemoveAsset(asset *Asset) {
+	for i := 0; i < len(vp.Assets); i++ {
+		if vp.Assets[i] == asset {
+			vp.Assets = nil
+		}
+	}
+}
+
+// ClearAssets clears all assets from the render queue
+func (vp *ViewPort) ClearAssets() {
+	vp.Assets = make([]*Asset, 0)
+}
+
 // WindowSize returns the width and height of the window
 func (vp *ViewPort) WindowSize() (w, h int32) {
 	w, h = vp.window.GetSize()
@@ -149,7 +159,7 @@ func (vp *ViewPort) WindowSize() (w, h int32) {
 // DrawAssets draws the supplied assets into the specified ViewPort
 func (vp *ViewPort) DrawAssets() {
 	for _, asset := range vp.Assets {
-		if asset.IsVisible() {
+		if asset != nil && asset.IsVisible() {
 			texture := asset.Texture()
 			_, _, w, h, _ := texture.Query()
 			x, y, _ := asset.Pos()

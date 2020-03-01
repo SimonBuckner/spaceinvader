@@ -2,24 +2,20 @@ package gfx
 
 import (
 	"testing"
-
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 var goodAtlas = BitmapAtlas{
-	Keys: map[AtlasKey]AtlasCoord{
-		AtlasKey("A"): AtlasCoord{X: 0, Y: 0},
-		AtlasKey("B"): AtlasCoord{X: 1, Y: 0},
-		AtlasKey("C"): AtlasCoord{X: 0, Y: 1},
-		AtlasKey("D"): AtlasCoord{X: 1, Y: 1},
+	Keys: map[string]AtlasCoord{
+		"A": AtlasCoord{X: 0, Y: 0},
+		"B": AtlasCoord{X: 1, Y: 0},
+		"C": AtlasCoord{X: 0, Y: 1},
+		"D": AtlasCoord{X: 1, Y: 1},
 	},
 	Pitch:      4,
 	TileWidth:  2,
 	TileHeight: 2,
 	Bitmap: Bitmap{
-		Pitch:             4,
-		Transparency:      false,
-		TransparentColour: sdl.Color{R: 0, G: 0, B: 0, A: 0},
+		Pitch: 4,
 		Pixels: []int{
 			100, 101, 200, 201,
 			110, 111, 210, 211,
@@ -37,13 +33,13 @@ func TestBitmapAtlas(t *testing.T) {
 	}
 
 	{
-		_, err := goodAtlas.GetTile(AtlasKey("z"))
+		_, err := goodAtlas.GetBitmap("z")
 		if err == nil {
 			t.Errorf("expected error getting tile 'z', get nil")
 		}
 	}
 	{
-		tile, err := goodAtlas.GetTile(AtlasKey("A"))
+		tile, err := goodAtlas.GetBitmap("A")
 		if err != nil {
 			t.Errorf("unexpected error getting tile 'A', expected nil, got %v", err)
 		}
@@ -67,7 +63,7 @@ func TestBitmapAtlas(t *testing.T) {
 		}
 	}
 	{
-		tile, err := goodAtlas.GetTile(AtlasKey("B"))
+		tile, err := goodAtlas.GetBitmap("B")
 		if err != nil {
 			t.Errorf("unexpected error getting tile 'B', expected nil, got %v", err)
 		}
@@ -91,7 +87,7 @@ func TestBitmapAtlas(t *testing.T) {
 		}
 	}
 	{
-		tile, err := goodAtlas.GetTile(AtlasKey("C"))
+		tile, err := goodAtlas.GetBitmap("C")
 		if err != nil {
 			t.Errorf("unexpected error getting tile 'C', expected nil, got %v", err)
 		}
@@ -115,7 +111,7 @@ func TestBitmapAtlas(t *testing.T) {
 		}
 	}
 	{
-		tile, err := goodAtlas.GetTile(AtlasKey("D"))
+		tile, err := goodAtlas.GetBitmap("D")
 		if err != nil {
 			t.Errorf("unexpected error getting tile 'D', expected nil, got %v", err)
 		}
@@ -141,19 +137,17 @@ func TestBitmapAtlas(t *testing.T) {
 }
 
 var badLenghtAtlas = BitmapAtlas{
-	Keys: map[AtlasKey]AtlasCoord{
-		AtlasKey("A"): AtlasCoord{X: 0, Y: 0},
-		AtlasKey("B"): AtlasCoord{X: 1, Y: 0},
-		AtlasKey("C"): AtlasCoord{X: 0, Y: 1},
-		AtlasKey("D"): AtlasCoord{X: 1, Y: 1},
+	Keys: map[string]AtlasCoord{
+		"A": AtlasCoord{X: 0, Y: 0},
+		"B": AtlasCoord{X: 1, Y: 0},
+		"C": AtlasCoord{X: 0, Y: 1},
+		"D": AtlasCoord{X: 1, Y: 1},
 	},
 	Pitch:      4,
 	TileWidth:  2,
 	TileHeight: 2,
 	Bitmap: Bitmap{
-		Pitch:             4,
-		Transparency:      false,
-		TransparentColour: sdl.Color{R: 0, G: 0, B: 0, A: 0},
+		Pitch: 4,
 		Pixels: []int{
 			100, 101, 200, 201,
 			110, 111, 210, 211,
@@ -171,19 +165,19 @@ func TestBitmapAtlasBadLnegth(t *testing.T) {
 	}
 
 	{
-		_, err := badLenghtAtlas.GetTile(AtlasKey("z"))
+		_, err := badLenghtAtlas.GetBitmap("z")
 		if err == nil {
 			t.Errorf("expected error getting tile 'z', get nil")
 		}
 	}
 	{
-		_, err := badLenghtAtlas.GetTile(AtlasKey("A"))
+		_, err := badLenghtAtlas.GetBitmap("A")
 		if err == nil {
 			t.Errorf("unexpected success getting tile 'A', expected err, got nil")
 		}
 	}
 	{
-		_, err := badLenghtAtlas.GetTile(AtlasKey("D"))
+		_, err := badLenghtAtlas.GetBitmap("D")
 		if err == nil {
 			t.Errorf("unexpected success getting tile 'D', expected err, got nil")
 		}

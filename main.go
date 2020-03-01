@@ -17,23 +17,24 @@ import (
 const (
 	originalWidth  = 224
 	originalHeight = 256
+	alienRows      = 5
+	alienCols      = 11
 )
 
 type gameState struct {
-	*gfx.StateControl
-	ticks           uint32
+	*gfx.Director
+	vp              *gfx.ViewPort
 	scale           float32
 	backgroundColor sdl.Color
-	vp              *gfx.ViewPort
-	players         []*playerState
-	currentPlayer   *playerState
-	alphabet        *gfx.AssetMap
+	// players         []*playerState
+	// currentPlayer   *playerState
+	ticks uint32
 }
 
 type playerState struct {
 	lives  int
 	score  int
-	ship   *gfx.Asset
+	ship   *playerShip
 	aliens []*enemyShip
 }
 
@@ -46,54 +47,52 @@ func main() {
 	defer vp.Destroy()
 
 	state := &gameState{
-		StateControl:    gfx.NewStateControl(),
+		Director:        gfx.NewDirector(),
 		vp:              vp,
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
+		scale:           calcScale(vp),
+		// players:         make([]*playerState, 2),
 	}
-
 	state.SetKeyboardEvent(state.keyb)
 	state.SetUpdateEvent(state.update)
-	state.scale = calcScale(vp)
-	state.players = make([]*playerState, 2)
-	for p := 0; p < 2; p++ {
-		ps := resetPlayer(vp, state.scale)
-		ps.ship.Name = "Player " + strconv.Itoa(p+1)
-		ps.aliens = resetAlienGrid(state)
-		state.players[p] = ps
-	}
-	state.currentPlayer = state.players[0]
-	state.alphabet = resetAlphabet(vp, state.scale)
+
+	newTestState(state)
+
+	// for p := 0; p < 2; p++ {
+	// 	ps := loadPlayerState(state, state.scale, p+1)
+	// 	state.players = append(state.players, ps)
+	// }
+	// state.currentPlayer = state.players[0]
+	// state.alphabet = resetAlphabet(vp, state.scale)
 	fmt.Println("Finished loading assets")
-	vp.Run(state)
+	vp.Run(state.Director)
 }
 
-func resetPlayer(vp *gfx.ViewPort, scale float32) *playerState {
-	fmt.Println("resetPlayer")
+func loadPlayerState(gs *gameState, scale float32, number int) *playerState {
+	fmt.Println("loading Player " + strconv.Itoa(number))
 
 	ps := &playerState{
 		lives: 3,
 		score: 0,
 	}
 
-	ship, err := gfx.AssetFromBitmaps(vp, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
+	ship, err := newPlayerShip(gs, number)
 	if err != nil {
 		fmt.Printf("error creating ship asset: %v", err)
 		panic(err)
 	}
-	ship.SetScale(scale)
-	vp.AddAsset(ship)
+	gs.vp.AddAsset(ship.Asset)
 	ps.ship = ship
 	return ps
 }
 
-func resetAlienGrid(gs *gameState) []*enemyShip {
-	fmt.Println("resetAlienGrid")
-	rows := 5
-	cols := 11
-	aliens := make([]*enemyShip, rows*cols)
+func loadAlienGrid(gs *gameState) ([]*enemyShip, error) {
+	fmt.Println("Loading Alien Grid")
+
+	aliens := make([]*enemyShip, alienRows*alienCols)
 	i := 0
-	for row := 0; row < rows; row++ {
-		for col := 0; col < cols; col++ {
+	for row := 0; row < alienRows; row++ {
+		for col := 0; col < alienCols; col++ {
 			var class enemyClass
 			switch row {
 			case 0, 1:
@@ -103,33 +102,32 @@ func resetAlienGrid(gs *gameState) []*enemyShip {
 			case 4:
 				class = enemyClassA
 			}
-			a, err := newAlien(gs, class)
+			alien, err := newEnemyShip(gs, class)
 			if err != nil {
-
+				return nil, err
 			}
-			a.SetScale(gs.scale)
-			aliens[i] = a
-			gs.vp.AddAsset(a.Asset)
+			aliens[i] = alien
+			gs.vp.AddAsset(alien.Asset)
 			i++
 		}
 	}
-	return aliens
+	return aliens, nil
 }
 
-func resetAlphabet(vp *gfx.ViewPort, scale float32) *gfx.AssetMap {
-	fmt.Println("resetAlphabet")
+// func resetAlphabet(vp *gfx.ViewPort, scale float32) *gfx.AssetMap {
+// 	fmt.Println("resetAlphabet")
 
-	atlas, err := gfx.NewAssetMapFromBitMapAtlas(vp, alphabetAtlas)
-	if err != nil {
-		panic(err)
-	}
-	for _, asset := range atlas.GetAssets() {
-		asset.SetScale(scale)
-		asset.Show()
-		vp.AddAsset(asset)
-	}
-	return atlas
-}
+// 	atlas, err := gfx.NewAssetMapFromBitMapAtlas(vp, alphabetAtlas)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	for _, asset := range atlas.GetAssets() {
+// 		asset.SetScale(scale)
+// 		asset.Show()
+// 		vp.AddAsset(asset)
+// 	}
+// 	return atlas
+// }
 
 func (gs *gameState) update(ticks uint32) {
 	vp := gs.vp
@@ -153,38 +151,36 @@ func (gs *gameState) update(ticks uint32) {
 
 	if ticks-gs.ticks > 500 {
 		gs.ticks = ticks
-		for _, player := range gs.players {
-			visible := player == gs.currentPlayer
-
-			for _, alien := range player.aliens {
-				if alien == nil {
-					panic("nil alien")
-				}
-				if visible {
-					alien.Show()
-					if alien.CurrentIndex() >= 2 {
-						alien.SetCurrent(0)
-					} else {
-						alien.SetCurrent(alien.CurrentIndex() + 1)
-					}
-				} else {
-					alien.Hide()
-				}
-			}
-			ship := player.ship
-			if visible {
-				ship.Show()
-				if ship.CurrentIndex() >= 2 {
-					ship.SetCurrent(0)
-				} else {
-					ship.SetCurrent(ship.CurrentIndex() + 1)
-				}
-			} else {
-				ship.Hide()
-			}
-		}
+		// for _, player := range gs.players {
+		// 	player.ship.update(ticks)
+		// for _, alien := range player.aliens {
+		// 	if alien == nil {
+		// 		panic("nil alien")
+		// 	}
+		// 	if visible {
+		// 		alien.Show()
+		// 		if alien.CurrentIndex() >= 2 {
+		// 			alien.SetCurrent(0)
+		// 		} else {
+		// 			alien.SetCurrent(alien.CurrentIndex() + 1)
+		// 		}
+		// 	} else {
+		// 		alien.Hide()
+		// 	}
+		// }
+		// ship := player.ship
+		// if visible {
+		// 	ship.Show()
+		// 	// if ship.CurrentIndex() >= 2 {
+		// 	// 	ship.SetCurrent(0)
+		// 	// } else {
+		// 	// 	ship.SetCurrent(ship.CurrentIndex() + 1)
+		// 	// }
+		// } else {
+		// 	ship.Hide()
+		// }
+		// }
 	}
-
 }
 
 func (gs *gameState) keyb(e *sdl.KeyboardEvent) {
@@ -192,46 +188,16 @@ func (gs *gameState) keyb(e *sdl.KeyboardEvent) {
 	if e.Type == sdl.KEYUP {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_Q:
-			gs.Quit()
+			gs.Close()
 			return
 		case sdl.SCANCODE_D:
 			gs.dumpAssetNames()
+		case sdl.SCANCODE_F1:
+			gs.StartActor(testStateName)
+		case sdl.SCANCODE_1:
+			// gs.players[0].ship.Show()
 		}
 
-	}
-	if e.Type == sdl.KEYDOWN {
-		switch e.Keysym.Scancode {
-		case sdl.SCANCODE_R:
-			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-				if gs.backgroundColor.R < 254 {
-					gs.backgroundColor.R++
-				}
-			} else {
-				if gs.backgroundColor.R > 0 {
-					gs.backgroundColor.R--
-				}
-			}
-		case sdl.SCANCODE_G:
-			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-				if gs.backgroundColor.G < 254 {
-					gs.backgroundColor.G++
-				}
-			} else {
-				if gs.backgroundColor.G > 0 {
-					gs.backgroundColor.G--
-				}
-			}
-		case sdl.SCANCODE_B:
-			if (e.Keysym.Mod & sdl.KMOD_SHIFT) == 0 {
-				if gs.backgroundColor.B < 254 {
-					gs.backgroundColor.B++
-				}
-			} else {
-				if gs.backgroundColor.B > 0 {
-					gs.backgroundColor.B--
-				}
-			}
-		}
 	}
 }
 

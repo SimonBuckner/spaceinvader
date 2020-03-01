@@ -6,144 +6,139 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// StateController defines the methods of the game state controller
-type StateController interface {
-	Running() bool
-	Quit()
-	KeyboardEvent(e *sdl.KeyboardEvent)
-	MouseButtonEvent(e *sdl.MouseButtonEvent)
-	MouseMotionEvent(e *sdl.MouseMotionEvent)
-	MouseWheelEvent(e *sdl.MouseWheelEvent)
-	UpdateEvent(ticks uint32)
+// Director holds the main Actor of the game. All other Actors are called from this Actor.
+type Director struct {
+	actors  []*Actor
+	current *Actor
+	closing bool
+
+	keyboardHandler    func(e *sdl.KeyboardEvent)
+	mouseButtonHandler func(e *sdl.MouseButtonEvent)
+	mouseMotionHandler func(e *sdl.MouseMotionEvent)
+	mouseWheelHandler  func(e *sdl.MouseWheelEvent)
+	updateHandler      func(ticks uint32)
 }
 
-// StateControl controls the state of the game
-type StateControl struct {
-	running bool
-	states  []*State
-	current *State
+// Actor represents a specific Actor in a game
+type Actor struct {
+	name     string
+	director *Director
 
-	keyboardEvent    func(e *sdl.KeyboardEvent)
-	mouseButtonEvent func(e *sdl.MouseButtonEvent)
-	mouseMotionEvent func(e *sdl.MouseMotionEvent)
-	mouseWheelEvent  func(e *sdl.MouseWheelEvent)
-	updateEvent      func(ticks uint32)
+	keyboardHandler    func(e *sdl.KeyboardEvent)
+	mouseButtonHandler func(e *sdl.MouseButtonEvent)
+	mouseMotionHandler func(e *sdl.MouseMotionEvent)
+	mouseWheelHandler  func(e *sdl.MouseWheelEvent)
+	updateHandler      func(ticks uint32)
 }
 
-// StateName indicates a state in a game
-type StateName string
-
-// State represents a specific state in a game
-type State struct {
-	name             StateName
-	sc               *StateControl
-	keyboardEvent    func(e *sdl.KeyboardEvent)
-	mouseButtonEvent func(e *sdl.MouseButtonEvent)
-	mouseMotionEvent func(e *sdl.MouseMotionEvent)
-	mouseWheelEvent  func(e *sdl.MouseWheelEvent)
-	updateEvent      func(ticks uint32)
-}
-
-// NewStateControl factory
-func NewStateControl() *StateControl {
-	return &StateControl{
-		running: true,
-		// states:  make([]*State, 0),
+// NewDirector factory
+func NewDirector() *Director {
+	return &Director{
+		actors:  make([]*Actor, 0),
+		closing: false,
 	}
 }
 
-// Running returns true is running
-func (sc *StateControl) Running() bool {
-	return sc.running
-}
-
-// Quit signals the viewport to quit
-func (sc *StateControl) Quit() {
-	sc.running = false
-}
-
-// SetKeyboardEvent sets the keyboard event handler
-func (sc *StateControl) SetKeyboardEvent(handler func(e *sdl.KeyboardEvent)) {
-	sc.keyboardEvent = handler
-}
-
-// KeyboardEvent handles keyboard events
-func (sc *StateControl) KeyboardEvent(e *sdl.KeyboardEvent) {
-	if sc.keyboardEvent != nil {
-		sc.keyboardEvent(e)
-	}
-}
-
-// SetMouseButtonEvent sets the MouseButton event handler
-func (sc *StateControl) SetMouseButtonEvent(handler func(e *sdl.MouseButtonEvent)) {
-	sc.mouseButtonEvent = handler
-}
-
-// MouseButtonEvent handles MouseButton events
-func (sc *StateControl) MouseButtonEvent(e *sdl.MouseButtonEvent) {
-	if sc.mouseButtonEvent != nil {
-		sc.mouseButtonEvent(e)
-	}
-}
-
-// SetMouseMotionEvent sets the MouseMotion event handler
-func (sc *StateControl) SetMouseMotionEvent(handler func(e *sdl.MouseMotionEvent)) {
-	sc.mouseMotionEvent = handler
-}
-
-// MouseMotionEvent handles MouseMotion events
-func (sc *StateControl) MouseMotionEvent(e *sdl.MouseMotionEvent) {
-	if sc.mouseMotionEvent != nil {
-		sc.mouseMotionEvent(e)
-	}
-}
-
-// SetMouseWheelEvent sets the MouseWheel event handler
-func (sc *StateControl) SetMouseWheelEvent(handler func(e *sdl.MouseWheelEvent)) {
-	sc.mouseWheelEvent = handler
-}
-
-// MouseWheelEvent handles MouseWheel events
-func (sc *StateControl) MouseWheelEvent(e *sdl.MouseWheelEvent) {
-	if sc.MouseWheelEvent != nil {
-		sc.MouseWheelEvent(e)
-	}
-}
-
-// SetUpdateEvent ..
-func (sc *StateControl) SetUpdateEvent(handler func(ticks uint32)) {
-	sc.updateEvent = handler
-}
-
-// UpdateEvent ..
-func (sc *StateControl) UpdateEvent(ticks uint32) {
-	if sc.updateEvent != nil {
-		sc.updateEvent(ticks)
-	}
-}
-
-// NewState creates a new state and adds a state to the controller
-func (sc *StateControl) NewState(name StateName) (*State, error) {
-	for _, s := range sc.states {
-		if s.name == name {
-			return nil, fmt.Errorf("state %v already exists", string(name))
+// NewActor returns a new game Actor linked to a director
+func (d *Director) NewActor(name string) (*Actor, error) {
+	for _, actor := range d.actors {
+		if actor.name == name {
+			return nil, fmt.Errorf("there is already a Actor named %v", string(name))
 		}
 	}
-	state := &State{
-		name: name,
-		sc:   sc,
+	actor := &Actor{
+		director: d,
+		name:     name,
 	}
-	sc.states = append(sc.states, state)
-	return state, nil
+	d.actors = append(d.actors, actor)
+	return actor, nil
 }
 
-// EnterState makes the named state the current one
-func (sc *StateControl) EnterState(name StateName) error {
-	for _, s := range sc.states {
+// IsLoading indicates no Actor has been entered
+func (d *Director) IsLoading() bool {
+	return !d.closing && d.current == nil
+}
+
+// IsRunning indicates a Actor has been entered
+func (d *Director) IsRunning() bool {
+	return !d.closing && d.current != nil
+}
+
+// IsClosing indicates the game is closing
+func (d *Director) IsClosing() bool {
+	return d.closing
+}
+
+// Close the director
+func (d *Director) Close() {
+	d.closing = true
+}
+
+// StartActor enters the named Actor
+func (d *Director) StartActor(name string) error {
+	for _, s := range d.actors {
 		if s.name == name {
-			sc.current = s
+			d.current = s
 			return nil
 		}
 	}
-	return fmt.Errorf("Unable to finn the state %v", string(name))
+	return fmt.Errorf("Actor '%v' not found", name)
+}
+
+// SetKeyboardEvent sets the keyboard handler
+func (d *Director) SetKeyboardEvent(handler func(e *sdl.KeyboardEvent)) {
+	d.keyboardHandler = handler
+}
+
+// KeyboardEvent triggers the keyboard event handler for the director and the current actor
+func (d *Director) KeyboardEvent(e *sdl.KeyboardEvent) {
+	if d.keyboardHandler != nil {
+		d.keyboardHandler(e)
+	}
+	if d.IsRunning() {
+		if d.current != nil {
+			d.current.KeyboardEvent(e)
+		}
+	}
+}
+
+// SetKeyboardEvent sets the keyboard handler
+func (a *Actor) SetKeyboardEvent(handler func(e *sdl.KeyboardEvent)) {
+	a.keyboardHandler = handler
+}
+
+// KeyboardEvent triggers the keyboard event handler for the director and the current actor
+func (a *Actor) KeyboardEvent(e *sdl.KeyboardEvent) {
+	if a.keyboardHandler != nil {
+		a.keyboardHandler(e)
+	}
+}
+
+// SetUpdateEvent sets the update handler
+func (d *Director) SetUpdateEvent(handler func(ticks uint32)) {
+	d.updateHandler = handler
+}
+
+// UpdateEvent triggers the update event handler for the director and the current actor
+func (d *Director) UpdateEvent(ticks uint32) {
+	if d.updateHandler != nil {
+		d.updateHandler(ticks)
+	}
+	if d.IsRunning() {
+		if d.current != nil {
+			d.current.UpdateEvent(ticks)
+		}
+	}
+}
+
+// SetUpdateEvent sets the update handler
+func (a *Actor) SetUpdateEvent(handler func(ticks uint32)) {
+	a.updateHandler = handler
+}
+
+// UpdateEvent triggers the update event handler for the director and the current actor
+func (a *Actor) UpdateEvent(ticks uint32) {
+	if a.updateHandler != nil {
+		a.updateHandler(ticks)
+	}
 }
