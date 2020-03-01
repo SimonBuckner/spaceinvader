@@ -11,8 +11,9 @@ const testStateName = "Test State"
 
 type testState struct {
 	*gfx.Actor
-	gs *gameState
-	p1 *player
+	gs      *gameState
+	p1      *player
+	p1Score *score
 }
 
 func newTestState(gs *gameState) (*testState, error) {
@@ -30,12 +31,23 @@ func newTestState(gs *gameState) (*testState, error) {
 		return nil, fmt.Errorf("eorror getting new testState; %v", err)
 	}
 	t.p1 = p1
+	p1Score, err := newScore(gs, scoreP1Pos)
+	if err != nil {
+		return nil, fmt.Errorf("eorror getting score for testState; %v", err)
+	}
+	t.p1Score = p1Score
+
 	return t, nil
 }
 
 func (s *testState) start() {
 	s.p1.Reset()
 	s.gs.vp.AddAsset(s.p1.Asset)
+
+	s.p1Score.Reset()
+	for _, score := range s.p1Score.assets {
+		s.gs.vp.AddAsset(score)
+	}
 }
 
 func (s *testState) keyb(e *sdl.KeyboardEvent) {

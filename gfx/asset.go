@@ -22,7 +22,7 @@ func NewAsset(vp *ViewPort, name string) *Asset {
 		pos:   Pos{},
 		w:     0,
 		h:     0,
-		scale: 1.0,
+		scale: vp.Scale(),
 		vp:    vp,
 	}
 }

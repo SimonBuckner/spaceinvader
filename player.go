@@ -10,6 +10,7 @@ import (
 const (
 	playerStartX = 1
 	playerStartY = 250
+	playerSpeed  = 60
 )
 
 type player struct {
@@ -38,9 +39,9 @@ func newPlayer(gs *gameState) (*player, error) {
 		exploding:    false,
 		explodeCount: 0,
 		ticks:        0,
-		x:            10,
-		y:            230,
-		speed:        60,
+		x:            playerStartX,
+		y:            playerStartY,
+		speed:        playerSpeed,
 	}
 
 	err := p.loadTextures(gs.vp, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
@@ -48,7 +49,6 @@ func newPlayer(gs *gameState) (*player, error) {
 		return nil, err
 	}
 	p.Asset = gfx.NewAssetFromTexture(gs.vp, "player", p.aliveTex)
-	p.SetScale(gs.vp.Scale())
 	x, y := gs.convertXY(int32(p.x), int32(p.y))
 	p.SetPos(x, y, 0)
 
