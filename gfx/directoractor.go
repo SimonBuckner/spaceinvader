@@ -29,6 +29,9 @@ type Actor struct {
 	mouseMotionHandler func(e *sdl.MouseMotionEvent)
 	mouseWheelHandler  func(e *sdl.MouseWheelEvent)
 	updateHandler      func(ticks uint32)
+
+	startHandler func()
+	stopHandler  func()
 }
 
 // NewDirector factory
@@ -79,6 +82,7 @@ func (d *Director) StartActor(name string) error {
 	for _, s := range d.actors {
 		if s.name == name {
 			d.current = s
+			s.StartEvent()
 			return nil
 		}
 	}
@@ -140,5 +144,17 @@ func (a *Actor) SetUpdateEvent(handler func(ticks uint32)) {
 func (a *Actor) UpdateEvent(ticks uint32) {
 	if a.updateHandler != nil {
 		a.updateHandler(ticks)
+	}
+}
+
+// SetStartEvent sets the start handler
+func (a *Actor) SetStartEvent(handler func()) {
+	a.startHandler = handler
+}
+
+// StartEvent triggers the start event handler for the director and the current actor
+func (a *Actor) StartEvent() {
+	if a.startHandler != nil {
+		a.startHandler()
 	}
 }

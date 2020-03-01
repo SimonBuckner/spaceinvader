@@ -18,7 +18,7 @@ type Asset struct {
 // NewAsset factory
 func NewAsset(vp *ViewPort, name string) *Asset {
 	return &Asset{
-		Name:  "",
+		Name:  name,
 		pos:   Pos{},
 		w:     0,
 		h:     0,

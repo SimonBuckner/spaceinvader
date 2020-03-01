@@ -2,106 +2,143 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-type playerClass int
-
-type playerStatus int
-
 const (
-	showPlayer playerStatus = iota
-	explodePlayer
-	hidePlayer
+	playerStartX = 1
+	playerStartY = 250
 )
 
-type playerShip struct {
+type player struct {
 	*gfx.Asset
 
-	liveTex *sdl.Texture
-	hitTex1 *sdl.Texture
-	hitTex2 *sdl.Texture
+	aliveTex    *sdl.Texture
+	explode1Tex *sdl.Texture
+	explode2Tex *sdl.Texture
 
-	status       playerStatus
+	gs           *gameState
+	score        int
+	lives        int
+	exploding    bool
 	explodeCount int
-	lastTick     uint32
+	ticks        uint32
+	x            float32
+	y            float32
+	speed        float32
 }
 
-func newPlayerShip(gs *gameState, number int) (*playerShip, error) {
-	ship := &playerShip{
-		status: hidePlayer,
+func newPlayer(gs *gameState) (*player, error) {
+	p := &player{
+		gs:           gs,
+		score:        0,
+		lives:        3,
+		exploding:    false,
+		explodeCount: 0,
+		ticks:        0,
+		x:            10,
+		y:            230,
+		speed:        60,
 	}
 
-	ship.Asset = gfx.NewAsset(gs.vp, "player_"+strconv.Itoa(number))
-	ship.SetScale(gs.scale)
-
-	err := ship.loadTextures(gs.vp, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
+	err := p.loadTextures(gs.vp, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
 	if err != nil {
 		return nil, err
 	}
+	p.Asset = gfx.NewAssetFromTexture(gs.vp, "player", p.aliveTex)
+	p.SetScale(gs.vp.Scale())
+	x, y := gs.convertXY(int32(p.x), int32(p.y))
+	p.SetPos(x, y, 0)
 
-	ship.SetTexture(ship.liveTex)
-	return ship, nil
+	return p, nil
 }
 
-func (ship *playerShip) loadTextures(vp *gfx.ViewPort, live, hit1, hit2 *gfx.Bitmap) error {
+func (p *player) loadTextures(vp *gfx.ViewPort, alive, explode1, explode2 *gfx.Bitmap) error {
 
 	var err error
-	ship.liveTex, err = live.ToTexture(vp)
+	p.aliveTex, err = alive.ToTexture(vp)
 	if err != nil {
 		return fmt.Errorf("unable to load live1 bitmap")
 	}
-	ship.hitTex1, err = hit1.ToTexture(vp)
+	p.explode1Tex, err = explode1.ToTexture(vp)
 	if err != nil {
 		return fmt.Errorf("unable to load live2 bitmap")
 	}
-	ship.hitTex2, err = hit1.ToTexture(vp)
+	p.explode2Tex, err = explode2.ToTexture(vp)
 	if err != nil {
 		return fmt.Errorf("unable to load hit bitmap")
 	}
 	return nil
 }
 
-func (ship *playerShip) update(ticks uint32) {
+func (p *player) update(ticks uint32) {
 
-	switch ship.status {
-	case showPlayer:
-		ship.Show()
-	case hidePlayer:
-		ship.Hide()
-	case explodePlayer:
-		if ticks-ship.lastTick > 16 {
-			ship.lastTick = ticks
-			ship.explodeCount--
-		}
-		if ship.explodeCount == 0 {
-			ship.Hide()
-			return
-		}
-		if ship.explodeCount%2 == 0 {
-			ship.Asset.SetTexture(ship.hitTex1)
-		} else {
-			ship.Asset.SetTexture(ship.hitTex2)
-		}
+	if p.lives == 0 {
+		p.Hide()
+		return
+	}
+	if p.exploding == false {
+		x, y := p.gs.convertXY(int32(p.x), int32(p.y))
+		p.SetPos(int32(x), int32(y), 0)
+		return
+	}
+
+	if p.exploding && p.explodeCount >= 10 {
+		p.lives--
+		p.Hide()
+		return
+	}
+
+	if ticks-p.ticks > (16 * 4) {
+		p.ticks = ticks
+		p.explodeCount++
+	}
+
+	if p.explodeCount%2 == 0 {
+		p.Asset.SetTexture(p.explode1Tex)
+	} else {
+		p.Asset.SetTexture(p.explode2Tex)
 	}
 }
 
-func (ship *playerShip) Show() {
-	ship.explodeCount = 10
-	ship.lastTick = sdl.GetTicks()
-	ship.status = explodePlayer
-}
-func (ship *playerShip) Hide() {
-	ship.explodeCount = 10
-	ship.lastTick = sdl.GetTicks()
-	ship.status = explodePlayer
+// Reset the player to a
+func (p *player) Reset() {
+	p.score = 0
+	p.lives = 3
+	p.exploding = false
+	p.explodeCount = 0
+	p.ticks = 0
+	p.x = playerStartX
+
+	p.SetTexture(p.aliveTex)
+	p.Show()
 }
 
-func (ship *playerShip) Explode() {
-	ship.explodeCount = 10
-	ship.lastTick = sdl.GetTicks()
-	ship.status = explodePlayer
+// Hit indicates the player has been hit
+func (p *player) Hit() {
+	p.exploding = true
+	p.ticks = sdl.GetTicks()
+}
+
+// MoveLeft moves the player left
+func (p *player) MoveLeft() {
+	// paddle.y += paddle.speed * pct * elapsedTime //
+	if p.lives == 0 || p.exploding == true {
+		return
+	}
+	if p.x > 0 {
+		p.x = p.x - float32(p.speed*p.gs.vp.ElapsedTime())
+	}
+}
+
+// MoveRight moves the player right
+func (p *player) MoveRight() {
+	if p.lives == 0 || p.exploding == true {
+		return
+	}
+	if p.x < originalWidth {
+		p.x = p.x + float32(p.speed*p.gs.vp.ElapsedTime())
+	}
 }

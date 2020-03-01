@@ -8,7 +8,6 @@ package main
 import (
 	"fmt"
 	"runtime"
-	"strconv"
 
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
@@ -17,6 +16,8 @@ import (
 const (
 	originalWidth  = 224
 	originalHeight = 256
+	width          = 1024
+	height         = 768
 	alienRows      = 5
 	alienCols      = 11
 )
@@ -24,23 +25,17 @@ const (
 type gameState struct {
 	*gfx.Director
 	vp              *gfx.ViewPort
-	scale           float32
 	backgroundColor sdl.Color
+	highscore       int
 	// players         []*playerState
 	// currentPlayer   *playerState
 	ticks uint32
 }
 
-type playerState struct {
-	lives  int
-	score  int
-	ship   *playerShip
-	aliens []*enemyShip
-}
-
 func main() {
 	runtime.LockOSThread()
-	vp, err := gfx.NewViewPort("Space Invaders", 50, 200, 600, 768)
+	scale := calcScale(width, height)
+	vp, err := gfx.NewViewPort("Space Invaders", 50, 200, width, height, scale)
 	if err != nil {
 		fmt.Printf("error creating window: %v", err)
 	}
@@ -50,7 +45,7 @@ func main() {
 		Director:        gfx.NewDirector(),
 		vp:              vp,
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
-		scale:           calcScale(vp),
+
 		// players:         make([]*playerState, 2),
 	}
 	state.SetKeyboardEvent(state.keyb)
@@ -65,25 +60,8 @@ func main() {
 	// state.currentPlayer = state.players[0]
 	// state.alphabet = resetAlphabet(vp, state.scale)
 	fmt.Println("Finished loading assets")
+	state.StartActor(testStateName)
 	vp.Run(state.Director)
-}
-
-func loadPlayerState(gs *gameState, scale float32, number int) *playerState {
-	fmt.Println("loading Player " + strconv.Itoa(number))
-
-	ps := &playerState{
-		lives: 3,
-		score: 0,
-	}
-
-	ship, err := newPlayerShip(gs, number)
-	if err != nil {
-		fmt.Printf("error creating ship asset: %v", err)
-		panic(err)
-	}
-	gs.vp.AddAsset(ship.Asset)
-	ps.ship = ship
-	return ps
 }
 
 func loadAlienGrid(gs *gameState) ([]*enemyShip, error) {
@@ -133,21 +111,21 @@ func (gs *gameState) update(ticks uint32) {
 	vp := gs.vp
 	vp.SetBackgroundColor(gs.backgroundColor)
 
-	gridSize := 20 * gs.scale
-	x := gridSize
-	y := gridSize
-	i := 0
-	for _, asset := range vp.Assets {
-		if asset.IsVisible() {
-			asset.SetPos(int32(x), int32(y), 0)
-			x = x + gridSize
-			i++
-			if i%10 == 0 {
-				x = gridSize
-				y = y + gridSize
-			}
-		}
-	}
+	// gridSize := 20 * gs.scale
+	// x := gridSize
+	// y := gridSize
+	// i := 0
+	// for _, asset := range vp.Assets {
+	// 	if asset.IsVisible() {
+	// 		asset.SetPos(int32(x), int32(y), 0)
+	// 		x = x + gridSize
+	// 		i++
+	// 		if i%10 == 0 {
+	// 			x = gridSize
+	// 			y = y + gridSize
+	// 		}
+	// 	}
+	// }
 
 	if ticks-gs.ticks > 500 {
 		gs.ticks = ticks
@@ -193,7 +171,7 @@ func (gs *gameState) keyb(e *sdl.KeyboardEvent) {
 		case sdl.SCANCODE_D:
 			gs.dumpAssetNames()
 		case sdl.SCANCODE_F1:
-			gs.StartActor(testStateName)
+			// gs.StartActor(testStateName)
 		case sdl.SCANCODE_1:
 			// gs.players[0].ship.Show()
 		}
@@ -201,13 +179,10 @@ func (gs *gameState) keyb(e *sdl.KeyboardEvent) {
 	}
 }
 
-func calcScale(vp *gfx.ViewPort) float32 {
+func calcScale(w, h int32) float32 {
 
-	w, h := vp.WindowSize()
-
-	rW := int(w / originalWidth)
-	rH := int(h / originalHeight)
-
+	rW := w / originalWidth
+	rH := h / originalHeight
 	if rW > rH {
 		return float32(rH)
 	}
@@ -217,7 +192,7 @@ func calcScale(vp *gfx.ViewPort) float32 {
 func (gs *gameState) dumpAssetNames() {
 	fmt.Println("index  name                     x     y visible")
 	fmt.Println("=====  ====================  ====  ==== =======")
-	for i, v := range gs.vp.Assets {
+	for i, v := range gs.vp.Assets() {
 		x, y, _ := v.Pos()
 		if v.IsVisible() {
 			fmt.Printf(" %3d   %-20v  %4d  %4d Yes\n", i, v.Name, x, y)
@@ -230,7 +205,14 @@ func (gs *gameState) dumpAssetNames() {
 func (gs *gameState) convertXY(x, y int32) (int32, int32) {
 	w, h := gs.vp.WindowSize()
 
-	newX := (w - int32(originalWidth*gs.scale)) / 2
-	newY := (h - int32(originalHeight*gs.scale)) / 2
+	ow := float32(originalWidth) * gs.vp.Scale()
+	oh := float32(originalHeight) * gs.vp.Scale()
+
+	offsetX := (float32(w) - ow) / 2
+	offsetY := (float32(h) - oh) / 2
+
+	newX := int32(offsetX + (float32(x) * gs.vp.Scale()))
+	newY := int32(offsetY + (float32(y) * gs.vp.Scale()))
+
 	return newX, newY
 }

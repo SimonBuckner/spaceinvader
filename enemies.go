@@ -40,7 +40,6 @@ func newEnemyShip(gs *gameState, class enemyClass) (*enemyShip, error) {
 		class: class,
 		state: livingEnemy,
 	}
-	ship.SetScale(gs.scale)
 
 	switch class {
 	case enemyClassA:
