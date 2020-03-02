@@ -24,7 +24,7 @@ const (
 )
 
 type enemyShip struct {
-	*gfx.Asset
+	*gfx.Prop
 
 	liveTex1 *sdl.Texture
 	liveTex2 *sdl.Texture
@@ -43,18 +43,18 @@ func newEnemyShip(gs *gameState, class enemyClass) (*enemyShip, error) {
 
 	switch class {
 	case enemyClassA:
-		ship.Asset = gfx.NewAsset(gs.vp, "alien_a")
-		if err := ship.loadTextures(gs.vp, alienSprA0, alienSprA1, alienExplode); err != nil {
+		ship.Prop = gfx.NewProp(gs.stage, "alien_a", nil)
+		if err := ship.loadTextures(gs.stage, alienSprA0, alienSprA1, alienExplode); err != nil {
 			return nil, err
 		}
 	case enemyClassB:
-		ship.Asset = gfx.NewAsset(gs.vp, "alien_b")
-		if err := ship.loadTextures(gs.vp, alienSprB0, alienSprB1, alienExplode); err != nil {
+		ship.Prop = gfx.NewProp(gs.stage, "alien_b", nil)
+		if err := ship.loadTextures(gs.stage, alienSprB0, alienSprB1, alienExplode); err != nil {
 			return nil, err
 		}
 	case enemyClassC:
-		ship.Asset = gfx.NewAsset(gs.vp, "alien_c")
-		if err := ship.loadTextures(gs.vp, alienSprC0, alienSprC1, alienExplode); err != nil {
+		ship.Prop = gfx.NewProp(gs.stage, "alien_c", nil)
+		if err := ship.loadTextures(gs.stage, alienSprC0, alienSprC1, alienExplode); err != nil {
 			return nil, err
 		}
 	}
@@ -63,18 +63,18 @@ func newEnemyShip(gs *gameState, class enemyClass) (*enemyShip, error) {
 	return ship, nil
 }
 
-func (ship *enemyShip) loadTextures(vp *gfx.ViewPort, live1, live2, hit *gfx.Bitmap) error {
+func (ship *enemyShip) loadTextures(stage *gfx.Stage, live1, live2, hit *gfx.Bitmap) error {
 
 	var err error
-	ship.liveTex1, err = alienSprA0.ToTexture(vp)
+	ship.liveTex1, err = alienSprA0.ToTexture(stage)
 	if err != nil {
 		return fmt.Errorf("unable to load live1 bitmap")
 	}
-	ship.liveTex1, err = alienSprA0.ToTexture(vp)
+	ship.liveTex1, err = alienSprA0.ToTexture(stage)
 	if err != nil {
 		return fmt.Errorf("unable to load live2 bitmap")
 	}
-	ship.liveTex1, err = alienSprA0.ToTexture(vp)
+	ship.liveTex1, err = alienSprA0.ToTexture(stage)
 	if err != nil {
 		return fmt.Errorf("unable to load hit bitmap")
 	}

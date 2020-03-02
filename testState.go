@@ -42,11 +42,11 @@ func newTestState(gs *gameState) (*testState, error) {
 
 func (s *testState) start() {
 	s.p1.Reset()
-	s.gs.vp.AddAsset(s.p1.Asset)
+	s.gs.stage.AddProp(s.p1.Prop)
 
 	s.p1Score.Reset()
-	for _, score := range s.p1Score.assets {
-		s.gs.vp.AddAsset(score)
+	for _, score := range s.p1Score.props {
+		s.gs.stage.AddProp(score)
 	}
 }
 
@@ -54,11 +54,11 @@ func (s *testState) keyb(e *sdl.KeyboardEvent) {
 	if e.Type == sdl.KEYUP {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_V:
-			if s.p1.IsVisible() {
-				s.p1.Hide()
+			if s.p1.Visible() {
+				s.p1.SetVisible(false)
 			} else {
 				s.p1.Reset()
-				s.p1.Show()
+				s.p1.SetVisible(true)
 			}
 		}
 	}
@@ -83,7 +83,7 @@ func (s *testState) keyb(e *sdl.KeyboardEvent) {
 }
 
 func (s *testState) update(ticks uint32) {
-	kb := s.gs.vp.Keyboard()
+	kb := s.gs.stage.Keyboard()
 	if kb.IsKeyDown(sdl.SCANCODE_LEFT) {
 		s.p1.MoveLeft()
 	} else if kb.IsKeyDown(sdl.SCANCODE_RIGHT) {

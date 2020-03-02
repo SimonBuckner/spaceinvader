@@ -14,7 +14,7 @@ const (
 )
 
 type player struct {
-	*gfx.Asset
+	*gfx.Prop
 
 	aliveTex    *sdl.Texture
 	explode1Tex *sdl.Texture
@@ -44,29 +44,29 @@ func newPlayer(gs *gameState) (*player, error) {
 		speed:        playerSpeed,
 	}
 
-	err := p.loadTextures(gs.vp, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
+	err := p.loadTextures(gs.stage, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
 	if err != nil {
 		return nil, err
 	}
-	p.Asset = gfx.NewAssetFromTexture(gs.vp, "player", p.aliveTex)
+	p.Prop = gfx.NewProp(gs.stage, "player", p.aliveTex)
 	x, y := gs.convertXY(int32(p.x), int32(p.y))
 	p.SetPos(x, y, 0)
 
 	return p, nil
 }
 
-func (p *player) loadTextures(vp *gfx.ViewPort, alive, explode1, explode2 *gfx.Bitmap) error {
+func (p *player) loadTextures(stage *gfx.Stage, alive, explode1, explode2 *gfx.Bitmap) error {
 
 	var err error
-	p.aliveTex, err = alive.ToTexture(vp)
+	p.aliveTex, err = alive.ToTexture(stage)
 	if err != nil {
 		return fmt.Errorf("unable to load live1 bitmap")
 	}
-	p.explode1Tex, err = explode1.ToTexture(vp)
+	p.explode1Tex, err = explode1.ToTexture(stage)
 	if err != nil {
 		return fmt.Errorf("unable to load live2 bitmap")
 	}
-	p.explode2Tex, err = explode2.ToTexture(vp)
+	p.explode2Tex, err = explode2.ToTexture(stage)
 	if err != nil {
 		return fmt.Errorf("unable to load hit bitmap")
 	}
@@ -76,7 +76,7 @@ func (p *player) loadTextures(vp *gfx.ViewPort, alive, explode1, explode2 *gfx.B
 func (p *player) update(ticks uint32) {
 
 	if p.lives == 0 {
-		p.Hide()
+		p.SetVisible(false)
 		return
 	}
 	if p.exploding == false {
@@ -87,7 +87,7 @@ func (p *player) update(ticks uint32) {
 
 	if p.exploding && p.explodeCount >= 10 {
 		p.lives--
-		p.Hide()
+		p.SetVisible(false)
 		return
 	}
 
@@ -97,9 +97,9 @@ func (p *player) update(ticks uint32) {
 	}
 
 	if p.explodeCount%2 == 0 {
-		p.Asset.SetTexture(p.explode1Tex)
+		p.Prop.SetTexture(p.explode1Tex)
 	} else {
-		p.Asset.SetTexture(p.explode2Tex)
+		p.Prop.SetTexture(p.explode2Tex)
 	}
 }
 
@@ -113,7 +113,7 @@ func (p *player) Reset() {
 	p.x = playerStartX
 
 	p.SetTexture(p.aliveTex)
-	p.Show()
+	p.SetVisible(true)
 }
 
 // Hit indicates the player has been hit
@@ -129,7 +129,7 @@ func (p *player) MoveLeft() {
 		return
 	}
 	if p.x > 0 {
-		p.x = p.x - float32(p.speed*p.gs.vp.ElapsedTime())
+		p.x = p.x - float32(p.speed*p.gs.stage.ElapsedTime())
 	}
 }
 
@@ -139,6 +139,6 @@ func (p *player) MoveRight() {
 		return
 	}
 	if p.x < originalWidth {
-		p.x = p.x + float32(p.speed*p.gs.vp.ElapsedTime())
+		p.x = p.x + float32(p.speed*p.gs.stage.ElapsedTime())
 	}
 }

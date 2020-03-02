@@ -5,5 +5,5 @@ package main
 // TODO:
 
 // type score struct {
-// 	*gfx.Asset
+// 	*gfx.Prop
 // }

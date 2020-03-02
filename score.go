@@ -19,7 +19,7 @@ const (
 )
 
 type score struct {
-	assets []*gfx.Asset
+	props  []*gfx.Prop
 	digits []*sdl.Texture
 
 	gs     *gameState
@@ -30,13 +30,13 @@ func newScore(gs *gameState, pos scorePos) (*score, error) {
 	s := &score{
 		gs:     gs,
 		points: 0,
-		assets: make([]*gfx.Asset, 4),
+		props:  make([]*gfx.Prop, 4),
 		digits: make([]*sdl.Texture, 10),
 	}
 
 	keys := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
 	for i, k := range keys {
-		tex, err := alphabetAtlas.GetTexture(gs.vp, k)
+		tex, err := alphabetAtlas.GetTexture(gs.stage, k)
 		if err != nil {
 			return nil, fmt.Errorf("error getting '%v' texture for score; %v", k, err)
 		}
@@ -45,13 +45,13 @@ func newScore(gs *gameState, pos scorePos) (*score, error) {
 
 	x := int32(pos)
 	y := int32(2)
-	for i, asset := range s.assets {
+	for i, prop := range s.props {
 		name := "score " + strconv.Itoa(int(i))
-		asset = gfx.NewAssetFromTexture(gs.vp, name, s.digits[0])
+		prop = gfx.NewProp(gs.stage, name, s.digits[0])
 
 		newX, newY := gs.convertXY(x, y)
-		asset.SetPos(newX, newY, 0)
-		s.assets[i] = asset
+		prop.SetPos(newX, newY, 0)
+		s.props[i] = prop
 		x += fontWidth
 	}
 
@@ -82,18 +82,18 @@ func (s *score) update(ticks uint32) {
 	// }
 
 	// if s.explodeCount%2 == 0 {
-	// 	s.Asset.SetTexture(s.explode1Tex)
+	// 	s.Prop.SetTexture(s.explode1Tex)
 	// } else {
-	// 	s.Asset.SetTexture(s.explode2Tex)
+	// 	s.Prop.SetTexture(s.explode2Tex)
 	// }
 }
 
 // Reset the score to a
 func (s *score) Reset() {
 	s.points = 0
-	for _, v := range s.assets {
+	for _, v := range s.props {
 
-		v.Show()
+		v.SetVisible(true)
 	}
 }
 

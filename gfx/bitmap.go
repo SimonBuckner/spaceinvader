@@ -14,7 +14,7 @@ type Bitmap struct {
 }
 
 // ToTexture returnes a texture from a bitmap
-func (bm *Bitmap) ToTexture(vp *ViewPort) (*sdl.Texture, error) {
+func (bm *Bitmap) ToTexture(stage *Stage) (*sdl.Texture, error) {
 
 	w := bm.Pitch
 	h := len(bm.Pixels) / bm.Pitch
@@ -35,7 +35,7 @@ func (bm *Bitmap) ToTexture(vp *ViewPort) (*sdl.Texture, error) {
 		pixels[i] = c.A
 		i++
 	}
-	tex, err := vp.Renderer().CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, int32(w), int32(h))
+	tex, err := stage.Renderer().CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, int32(w), int32(h))
 	if err != nil {
 		return nil, err
 	}
@@ -107,10 +107,10 @@ func (bma *BitmapAtlas) GetBitmap(key string) (*Bitmap, error) {
 }
 
 // GetTexture returns a texuter for the bitmap at the position associated witht he key
-func (bma *BitmapAtlas) GetTexture(vp *ViewPort, key string) (*sdl.Texture, error) {
+func (bma *BitmapAtlas) GetTexture(stage *Stage, key string) (*sdl.Texture, error) {
 	bm, err := bma.GetBitmap(key)
 	if err != nil {
 		return nil, err
 	}
-	return bm.ToTexture(vp)
+	return bm.ToTexture(stage)
 }

@@ -1,7 +1,7 @@
 package main
 
 /*
-	TODO: Alphabet assets are not drawing
+	TODO: Alphabet props are not drawing
 
 */
 
@@ -24,7 +24,7 @@ const (
 
 type gameState struct {
 	*gfx.Director
-	vp              *gfx.ViewPort
+	stage           *gfx.Stage
 	backgroundColor sdl.Color
 	highscore       int
 	// players         []*playerState
@@ -35,15 +35,15 @@ type gameState struct {
 func main() {
 	runtime.LockOSThread()
 	scale := calcScale(width, height)
-	vp, err := gfx.NewViewPort("Space Invaders", 50, 200, width, height, scale)
+	stage, err := gfx.NewStage("Space Invaders", 50, 200, width, height, scale)
 	if err != nil {
 		fmt.Printf("error creating window: %v", err)
 	}
-	defer vp.Destroy()
+	defer stage.Destroy()
 
 	state := &gameState{
 		Director:        gfx.NewDirector(),
-		vp:              vp,
+		stage:           stage,
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
 
 		// players:         make([]*playerState, 2),
@@ -58,10 +58,10 @@ func main() {
 	// 	state.players = append(state.players, ps)
 	// }
 	// state.currentPlayer = state.players[0]
-	// state.alphabet = resetAlphabet(vp, state.scale)
-	fmt.Println("Finished loading assets")
+	// state.alphabet = resetAlphabet(stage, state.scale)
+	fmt.Println("Finished loading props")
 	state.StartActor(testStateName)
-	vp.Run(state.Director)
+	stage.Run(state.Director)
 }
 
 func loadAlienGrid(gs *gameState) ([]*enemyShip, error) {
@@ -85,39 +85,39 @@ func loadAlienGrid(gs *gameState) ([]*enemyShip, error) {
 				return nil, err
 			}
 			aliens[i] = alien
-			gs.vp.AddAsset(alien.Asset)
+			gs.stage.AddProp(alien.Prop)
 			i++
 		}
 	}
 	return aliens, nil
 }
 
-// func resetAlphabet(vp *gfx.ViewPort, scale float32) *gfx.AssetMap {
+// func resetAlphabet(stage *gfx.Stage, scale float32) *gfx.PropMap {
 // 	fmt.Println("resetAlphabet")
 
-// 	atlas, err := gfx.NewAssetMapFromBitMapAtlas(vp, alphabetAtlas)
+// 	atlas, err := gfx.NewPropMapFromBitMapAtlas(stage, alphabetAtlas)
 // 	if err != nil {
 // 		panic(err)
 // 	}
-// 	for _, asset := range atlas.GetAssets() {
-// 		asset.SetScale(scale)
-// 		asset.Show()
-// 		vp.AddAsset(asset)
+// 	for _, prop := range atlas.GetProps() {
+// 		prop.SetScale(scale)
+// 		prop.Show()
+// 		stage.AddProp(prop)
 // 	}
 // 	return atlas
 // }
 
 func (gs *gameState) update(ticks uint32) {
-	vp := gs.vp
-	vp.SetBackgroundColor(gs.backgroundColor)
+	stage := gs.stage
+	stage.SetBackgroundColor(gs.backgroundColor)
 
 	// gridSize := 20 * gs.scale
 	// x := gridSize
 	// y := gridSize
 	// i := 0
-	// for _, asset := range vp.Assets {
-	// 	if asset.IsVisible() {
-	// 		asset.SetPos(int32(x), int32(y), 0)
+	// for _, prop := range stage.Props {
+	// 	if prop.IsVisible() {
+	// 		prop.SetPos(int32(x), int32(y), 0)
 	// 		x = x + gridSize
 	// 		i++
 	// 		if i%10 == 0 {
@@ -169,7 +169,7 @@ func (gs *gameState) keyb(e *sdl.KeyboardEvent) {
 			gs.Close()
 			return
 		case sdl.SCANCODE_D:
-			gs.dumpAssetNames()
+			gs.dumpPropNames()
 		case sdl.SCANCODE_F1:
 			// gs.StartActor(testStateName)
 		case sdl.SCANCODE_1:
@@ -189,12 +189,12 @@ func calcScale(w, h int32) float32 {
 	return float32(rW)
 }
 
-func (gs *gameState) dumpAssetNames() {
+func (gs *gameState) dumpPropNames() {
 	fmt.Println("index  name                     x     y visible")
 	fmt.Println("=====  ====================  ====  ==== =======")
-	for i, v := range gs.vp.Assets() {
+	for i, v := range gs.stage.Props() {
 		x, y, _ := v.Pos()
-		if v.IsVisible() {
+		if v.Visible() {
 			fmt.Printf(" %3d   %-20v  %4d  %4d Yes\n", i, v.Name, x, y)
 		} else {
 			fmt.Printf(" %3d   %-20v  %4d  %4d No\n", i, v.Name, x, y)
@@ -203,16 +203,16 @@ func (gs *gameState) dumpAssetNames() {
 }
 
 func (gs *gameState) convertXY(x, y int32) (int32, int32) {
-	w, h := gs.vp.WindowSize()
+	w, h := gs.stage.WindowSize()
 
-	ow := float32(originalWidth) * gs.vp.Scale()
-	oh := float32(originalHeight) * gs.vp.Scale()
+	ow := float32(originalWidth) * gs.stage.Scale()
+	oh := float32(originalHeight) * gs.stage.Scale()
 
 	offsetX := (float32(w) - ow) / 2
 	offsetY := (float32(h) - oh) / 2
 
-	newX := int32(offsetX + (float32(x) * gs.vp.Scale()))
-	newY := int32(offsetY + (float32(y) * gs.vp.Scale()))
+	newX := int32(offsetX + (float32(x) * gs.stage.Scale()))
+	newY := int32(offsetY + (float32(y) * gs.stage.Scale()))
 
 	return newX, newY
 }
