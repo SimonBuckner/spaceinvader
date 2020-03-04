@@ -1,92 +1,115 @@
 package gfx
 
-import (
-	"fmt"
+// // Director holds the main Scene of the game. All other Scenes are called from this Scene.
+// type Director struct {
 
-	"github.com/veandco/go-sdl2/sdl"
-)
+// }
 
-// Director holds the main Actor of the game. All other Actors are called from this Actor.
-type Director struct {
-	actors  []*Actor
-	current *Actor
-	closing bool
+// // NewDirector fsceney
+// func NewDirector() *Director {
+// 	return &Director{
+// 		scenes:  make([]*Scene, 0),
+// 		closing: false,
+// 	}
+// }
 
-	keyboardHandler    func(e *sdl.KeyboardEvent)
-	mouseButtonHandler func(e *sdl.MouseButtonEvent)
-	mouseMotionHandler func(e *sdl.MouseMotionEvent)
-	mouseWheelHandler  func(e *sdl.MouseWheelEvent)
-	updateHandler      func(ticks uint32)
-}
+// // IsLoading indicates no Scene has been entered
+// func (d *Director) IsLoading() bool {
+// 	return !d.closing && d.current == nil
+// }
 
-// NewDirector factory
-func NewDirector() *Director {
-	return &Director{
-		actors:  make([]*Actor, 0),
-		closing: false,
-	}
-}
+// // IsRunning indicates a Scene has been entered
+// func (d *Director) IsRunning() bool {
+// 	return !d.closing && d.current != nil
+// }
 
-// NewActor returns a new game Actor linked to a director
-func (d *Director) NewActor(name string) (*Actor, error) {
-	for _, actor := range d.actors {
-		if actor.name == name {
-			return nil, fmt.Errorf("there is already a Actor named %v", string(name))
-		}
-	}
-	actor := &Actor{
-		director: d,
-		name:     name,
-	}
-	d.actors = append(d.actors, actor)
-	return actor, nil
-}
-
-// IsLoading indicates no Actor has been entered
-func (d *Director) IsLoading() bool {
-	return !d.closing && d.current == nil
-}
-
-// IsRunning indicates a Actor has been entered
-func (d *Director) IsRunning() bool {
-	return !d.closing && d.current != nil
-}
-
-// IsClosing indicates the game is closing
-func (d *Director) IsClosing() bool {
-	return d.closing
-}
+// // IsClosing indicates the game is closing
+// func (d *Director) IsClosing() bool {
+// 	return d.closing
+// }
 
 // Close the director
-func (d *Director) Close() {
-	d.closing = true
-}
+// func (d *Director) Close() {
+// 	d.closing = true
+// }
 
-// StartActor enters the named Actor
-func (d *Director) StartActor(name string) error {
-	for _, s := range d.actors {
-		if s.name == name {
-			d.current = s
-			s.StartEvent()
-			return nil
-		}
-	}
-	return fmt.Errorf("Actor '%v' not found", name)
-}
+// // SetStartEvent sets the start handler
+// func (s *Actor) SetStartEvent(handler func()) {
+// 	s.startHandler = handler
+// }
 
-// SetKeyboardEvent sets the keyboard handler
-func (d *Director) SetKeyboardEvent(handler func(e *sdl.KeyboardEvent)) {
-	d.keyboardHandler = handler
-}
+// // StartEvent triggers the start event handler for the director and the current scene
+// func (s *Actor) StartEvent() {
+// 	if s.startHandler != nil {
+// 		s.startHandler()
+// 	}
+// }
 
-// KeyboardEvent triggers the keyboard event handler for the director and the current actor
-func (d *Director) KeyboardEvent(e *sdl.KeyboardEvent) {
-	if d.keyboardHandler != nil {
-		d.keyboardHandler(e)
-	}
-	if d.IsRunning() {
-		if d.current != nil {
-			d.current.KeyboardEvent(e)
-		}
-	}
-}
+// // SetStopEvent sets the start handler
+// func (s *Actor) SetStopEvent(handler func()) {
+// 	s.startHandler = handler
+// }
+
+// // StopEvent triggers the start event handler for the director and the current scene
+// func (s *Actor) StopEvent() {
+// 	if s.startHandler != nil {
+// 		s.startHandler()
+// 	}
+// }
+
+// // SetUpdateEvent sets the update handler
+// func (d *Director) SetUpdateEvent(handler func(ticks uint32)) {
+// 	d.updateHandler = handler
+// }
+
+// // UpdateEvent triggers the update event handler for the director and the current scene
+// func (d *Director) UpdateEvent(ticks uint32) {
+// 	if d.updateHandler != nil {
+// 		d.updateHandler(ticks)
+// 	}
+// 	if d.IsRunning() {
+// 		if d.current != nil {
+// 			d.current.UpdateEvent(ticks)
+// 		}
+// 	}
+// }
+
+// // StartScene enters the named Scene
+// func (d *Director) StartScene(name string) error {
+// 	for _, s := range d.scenes {
+// 		if s.Name() == name {
+// 			d.current = s
+// 			s.StartEvent()
+// 			return nil
+// 		}
+// 	}
+// 	return fmt.Errorf("Scene '%v' not found", name)
+// }
+
+// // SetKeyboardEvent sets the keyboard handler
+// func (d *Director) SetKeyboardEvent(handler func(e *sdl.KeyboardEvent)) {
+// 	d.keyboardHandler = handler
+// }
+
+// // KeyboardEvent triggers the keyboard event handler for the director and the current scene
+// func (d *Director) KeyboardEvent(e *sdl.KeyboardEvent) {
+// 	if d.keyboardHandler != nil {
+// 		d.keyboardHandler(e)
+// 	}
+// 	if d.IsRunning() {
+// 		if d.current != nil {
+// 			d.current.KeyboardEvent(e)
+// 		}
+// 	}
+// }
+
+// // AttachScene attaches a scene to the director
+// func (d *Director) AttachScene(scene *Scene) error {
+// 	for _, s := range d.scenes {
+// 		if scene.Name() == s.Name() {
+// 			return fmt.Errorf("there is already a Scene named %v", scene.Name())
+// 		}
+// 	}
+// 	d.scenes = append(d.scenes, scene)
+// 	return nil
+// }

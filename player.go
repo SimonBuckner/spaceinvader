@@ -14,43 +14,39 @@ const (
 )
 
 type player struct {
-	*gfx.Prop
-
+	*gfx.Actor
+	prop        *gfx.Prop
+	game        *game
 	aliveTex    *sdl.Texture
 	explode1Tex *sdl.Texture
 	explode2Tex *sdl.Texture
 
-	gs           *gameState
 	score        int
 	lives        int
 	exploding    bool
 	explodeCount int
 	ticks        uint32
-	x            float32
-	y            float32
-	speed        float32
 }
 
-func newPlayer(gs *gameState) (*player, error) {
+func newPlayer(game *game) (*player, error) {
 	p := &player{
-		gs:           gs,
+		Actor:        gfx.NewActor("player"),
+		game:         game,
 		score:        0,
 		lives:        3,
 		exploding:    false,
 		explodeCount: 0,
-		ticks:        0,
-		x:            playerStartX,
-		y:            playerStartY,
-		speed:        playerSpeed,
 	}
 
-	err := p.loadTextures(gs.stage, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
+	err := p.loadTextures(game.stage, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
 	if err != nil {
 		return nil, err
 	}
-	p.Prop = gfx.NewProp(gs.stage, "player", p.aliveTex)
-	x, y := gs.convertXY(int32(p.x), int32(p.y))
-	p.SetPos(x, y, 0)
+	p.prop = gfx.NewProp(game.stage, "player", p.aliveTex)
+	x, y := game.convertXY(playerStartX, playerStartY)
+	p.Pos.SetInt32(x, y, 0)
+	p.prop.SetInt32(x, y, 0)
+	p.Speed.Set(60, 0, 0)
 
 	return p, nil
 }
@@ -76,18 +72,17 @@ func (p *player) loadTextures(stage *gfx.Stage, alive, explode1, explode2 *gfx.B
 func (p *player) update(ticks uint32) {
 
 	if p.lives == 0 {
-		p.SetVisible(false)
+		p.prop.SetVisible(false)
 		return
 	}
 	if p.exploding == false {
-		x, y := p.gs.convertXY(int32(p.x), int32(p.y))
-		p.SetPos(int32(x), int32(y), 0)
+		p.prop.Set(p.X, p.Y, p.Z)
 		return
 	}
 
 	if p.exploding && p.explodeCount >= 10 {
 		p.lives--
-		p.SetVisible(false)
+		p.prop.SetVisible(false)
 		return
 	}
 
@@ -97,9 +92,9 @@ func (p *player) update(ticks uint32) {
 	}
 
 	if p.explodeCount%2 == 0 {
-		p.Prop.SetTexture(p.explode1Tex)
+		p.prop.SetTexture(p.explode1Tex)
 	} else {
-		p.Prop.SetTexture(p.explode2Tex)
+		p.prop.SetTexture(p.explode2Tex)
 	}
 }
 
@@ -110,10 +105,11 @@ func (p *player) Reset() {
 	p.exploding = false
 	p.explodeCount = 0
 	p.ticks = 0
-	p.x = playerStartX
+	x, _ := p.game.convertXY(playerStartX, 0)
+	p.SetX(float32(x))
 
-	p.SetTexture(p.aliveTex)
-	p.SetVisible(true)
+	p.prop.SetTexture(p.aliveTex)
+	p.prop.SetVisible(true)
 }
 
 // Hit indicates the player has been hit
@@ -124,12 +120,11 @@ func (p *player) Hit() {
 
 // MoveLeft moves the player left
 func (p *player) MoveLeft() {
-	// paddle.y += paddle.speed * pct * elapsedTime //
 	if p.lives == 0 || p.exploding == true {
 		return
 	}
-	if p.x > 0 {
-		p.x = p.x - float32(p.speed*p.gs.stage.ElapsedTime())
+	if p.X > 0 {
+		p.X = p.X - float32(p.Speed.X*p.game.stage.ElapsedTime())
 	}
 }
 
@@ -138,7 +133,7 @@ func (p *player) MoveRight() {
 	if p.lives == 0 || p.exploding == true {
 		return
 	}
-	if p.x < originalWidth {
-		p.x = p.x + float32(p.speed*p.gs.stage.ElapsedTime())
+	if p.X < originalWidth {
+		p.X = p.X + float32(p.Speed.X*p.game.stage.ElapsedTime())
 	}
 }

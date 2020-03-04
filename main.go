@@ -22,14 +22,9 @@ const (
 	alienCols      = 11
 )
 
-type gameState struct {
-	*gfx.Director
+type game struct {
 	stage           *gfx.Stage
 	backgroundColor sdl.Color
-	highscore       int
-	// players         []*playerState
-	// currentPlayer   *playerState
-	ticks uint32
 }
 
 func main() {
@@ -41,56 +36,62 @@ func main() {
 	}
 	defer stage.Destroy()
 
-	state := &gameState{
-		Director:        gfx.NewDirector(),
+	if _, err := newTestScene(stage); err != nil {
+		panic(err)
+	}
+
+	game := &game{
 		stage:           stage,
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
-
-		// players:         make([]*playerState, 2),
 	}
-	state.SetKeyboardEvent(state.keyb)
-	state.SetUpdateEvent(state.update)
-
-	newTestState(state)
-
-	// for p := 0; p < 2; p++ {
-	// 	ps := loadPlayerState(state, state.scale, p+1)
-	// 	state.players = append(state.players, ps)
-	// }
-	// state.currentPlayer = state.players[0]
-	// state.alphabet = resetAlphabet(stage, state.scale)
-	fmt.Println("Finished loading props")
-	state.StartActor(testStateName)
-	stage.Run(state.Director)
+	stage.SetKeyboardEvent(game.keyb)
+	stage.Run()
 }
 
-func loadAlienGrid(gs *gameState) ([]*enemyShip, error) {
-	fmt.Println("Loading Alien Grid")
-
-	aliens := make([]*enemyShip, alienRows*alienCols)
-	i := 0
-	for row := 0; row < alienRows; row++ {
-		for col := 0; col < alienCols; col++ {
-			var class enemyClass
-			switch row {
-			case 0, 1:
-				class = enemyClassC
-			case 2, 3:
-				class = enemyClassB
-			case 4:
-				class = enemyClassA
-			}
-			alien, err := newEnemyShip(gs, class)
-			if err != nil {
-				return nil, err
-			}
-			aliens[i] = alien
-			gs.stage.AddProp(alien.Prop)
-			i++
+func (g *game) keyb(e *sdl.KeyboardEvent) {
+	fmt.Println("game.keyb")
+	if e.Type == sdl.KEYUP {
+		switch e.Keysym.Scancode {
+		case sdl.SCANCODE_Q:
+			g.stage.Close()
+			return
+		case sdl.SCANCODE_D:
+			g.dumpPropNames()
+		case sdl.SCANCODE_F1:
+			g.stage.StartScene(testSceneName)
+		case sdl.SCANCODE_1:
+			// stage.players[0].ship.Show()
 		}
 	}
-	return aliens, nil
 }
+
+// func loadAlienGrid(g *gamee) ([]*enemyShip, error) {
+// 	fmt.Println("Loading Alien Grid")
+
+// 	aliens := make([]*enemyShip, alienRows*alienCols)
+// 	i := 0
+// 	for row := 0; row < alienRows; row++ {
+// 		for col := 0; col < alienCols; col++ {
+// 			var class enemyClass
+// 			switch row {
+// 			case 0, 1:
+// 				class = enemyClassC
+// 			case 2, 3:
+// 				class = enemyClassB
+// 			case 4:
+// 				class = enemyClassA
+// 			}
+// 			alien, err := newEnemyShip(stage, class)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			aliens[i] = alien
+// 			stage.stage.AddProp(alien.Prop)
+// 			i++
+// 		}
+// 	}
+// 	return aliens, nil
+// }
 
 // func resetAlphabet(stage *gfx.Stage, scale float32) *gfx.PropMap {
 // 	fmt.Println("resetAlphabet")
@@ -107,11 +108,11 @@ func loadAlienGrid(gs *gameState) ([]*enemyShip, error) {
 // 	return atlas
 // }
 
-func (gs *gameState) update(ticks uint32) {
-	stage := gs.stage
-	stage.SetBackgroundColor(gs.backgroundColor)
+func (g *game) update(ticks uint32) {
 
-	// gridSize := 20 * gs.scale
+	g.stage.SetBackgroundColor(g.backgroundColor)
+
+	// gridSize := 20 * stage.scale
 	// x := gridSize
 	// y := gridSize
 	// i := 0
@@ -127,56 +128,38 @@ func (gs *gameState) update(ticks uint32) {
 	// 	}
 	// }
 
-	if ticks-gs.ticks > 500 {
-		gs.ticks = ticks
-		// for _, player := range gs.players {
-		// 	player.ship.update(ticks)
-		// for _, alien := range player.aliens {
-		// 	if alien == nil {
-		// 		panic("nil alien")
-		// 	}
-		// 	if visible {
-		// 		alien.Show()
-		// 		if alien.CurrentIndex() >= 2 {
-		// 			alien.SetCurrent(0)
-		// 		} else {
-		// 			alien.SetCurrent(alien.CurrentIndex() + 1)
-		// 		}
-		// 	} else {
-		// 		alien.Hide()
-		// 	}
-		// }
-		// ship := player.ship
-		// if visible {
-		// 	ship.Show()
-		// 	// if ship.CurrentIndex() >= 2 {
-		// 	// 	ship.SetCurrent(0)
-		// 	// } else {
-		// 	// 	ship.SetCurrent(ship.CurrentIndex() + 1)
-		// 	// }
-		// } else {
-		// 	ship.Hide()
-		// }
-		// }
-	}
-}
-
-func (gs *gameState) keyb(e *sdl.KeyboardEvent) {
-
-	if e.Type == sdl.KEYUP {
-		switch e.Keysym.Scancode {
-		case sdl.SCANCODE_Q:
-			gs.Close()
-			return
-		case sdl.SCANCODE_D:
-			gs.dumpPropNames()
-		case sdl.SCANCODE_F1:
-			// gs.StartActor(testStateName)
-		case sdl.SCANCODE_1:
-			// gs.players[0].ship.Show()
-		}
-
-	}
+	// if ticks-stage.ticks > 500 {
+	// 	stage.ticks = ticks
+	// for _, player := range stage.players {
+	// 	player.ship.update(ticks)
+	// for _, alien := range player.aliens {
+	// 	if alien == nil {
+	// 		panic("nil alien")
+	// 	}
+	// 	if visible {
+	// 		alien.Show()
+	// 		if alien.CurrentIndex() >= 2 {
+	// 			alien.SetCurrent(0)
+	// 		} else {
+	// 			alien.SetCurrent(alien.CurrentIndex() + 1)
+	// 		}
+	// 	} else {
+	// 		alien.Hide()
+	// 	}
+	// }
+	// ship := player.ship
+	// if visible {
+	// 	ship.Show()
+	// 	// if ship.CurrentIndex() >= 2 {
+	// 	// 	ship.SetCurrent(0)
+	// 	// } else {
+	// 	// 	ship.SetCurrent(ship.CurrentIndex() + 1)
+	// 	// }
+	// } else {
+	// 	ship.Hide()
+	// }
+	// }
+	// }
 }
 
 func calcScale(w, h int32) float32 {
@@ -189,11 +172,11 @@ func calcScale(w, h int32) float32 {
 	return float32(rW)
 }
 
-func (gs *gameState) dumpPropNames() {
+func (g *game) dumpPropNames() {
 	fmt.Println("index  name                     x     y visible")
 	fmt.Println("=====  ====================  ====  ==== =======")
-	for i, v := range gs.stage.Props() {
-		x, y, _ := v.Pos()
+	for i, v := range g.stage.Props() {
+		x, y, _ := v.PosInt32()
 		if v.Visible() {
 			fmt.Printf(" %3d   %-20v  %4d  %4d Yes\n", i, v.Name, x, y)
 		} else {
@@ -202,17 +185,17 @@ func (gs *gameState) dumpPropNames() {
 	}
 }
 
-func (gs *gameState) convertXY(x, y int32) (int32, int32) {
-	w, h := gs.stage.WindowSize()
+func (g *game) convertXY(x, y int32) (int32, int32) {
+	w, h := g.stage.WindowSize()
 
-	ow := float32(originalWidth) * gs.stage.Scale()
-	oh := float32(originalHeight) * gs.stage.Scale()
+	ow := float32(originalWidth) * g.stage.Scale()
+	oh := float32(originalHeight) * g.stage.Scale()
 
 	offsetX := (float32(w) - ow) / 2
 	offsetY := (float32(h) - oh) / 2
 
-	newX := int32(offsetX + (float32(x) * gs.stage.Scale()))
-	newY := int32(offsetY + (float32(y) * gs.stage.Scale()))
+	newX := int32(offsetX + (float32(x) * g.stage.Scale()))
+	newY := int32(offsetY + (float32(y) * g.stage.Scale()))
 
 	return newX, newY
 }

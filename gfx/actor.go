@@ -1,48 +1,59 @@
 package gfx
 
-import "github.com/veandco/go-sdl2/sdl"
-
 // Actor represents a specific Actor in a game
 type Actor struct {
-	name     string
-	director *Director
-
-	keyboardHandler    func(e *sdl.KeyboardEvent)
-	mouseButtonHandler func(e *sdl.MouseButtonEvent)
-	mouseMotionHandler func(e *sdl.MouseMotionEvent)
-	mouseWheelHandler  func(e *sdl.MouseWheelEvent)
-	updateHandler      func(ticks uint32)
-
-	startHandler func()
-	stopHandler  func()
+	Pos
+	Speed         Pos
+	name          string
+	scene         *Scene
+	startHandler  func()
+	stopHandler   func()
+	updateHandler func(ticks uint32)
 }
 
-// SetKeyboardEvent sets the keyboard handler
-func (a *Actor) SetKeyboardEvent(handler func(e *sdl.KeyboardEvent)) {
-	a.keyboardHandler = handler
-}
-
-// KeyboardEvent triggers the keyboard event handler for the director and the current actor
-func (a *Actor) KeyboardEvent(e *sdl.KeyboardEvent) {
-	if a.keyboardHandler != nil {
-		a.keyboardHandler(e)
+// NewActor returns a new game Actor
+func NewActor(name string) *Actor {
+	return &Actor{
+		name: name,
 	}
 }
 
-// SetUpdateEvent sets the update handler
-func (d *Director) SetUpdateEvent(handler func(ticks uint32)) {
-	d.updateHandler = handler
+// Name ..
+func (a *Actor) Name() string {
+	return a.name
 }
 
-// UpdateEvent triggers the update event handler for the director and the current actor
-func (d *Director) UpdateEvent(ticks uint32) {
-	if d.updateHandler != nil {
-		d.updateHandler(ticks)
+// Scene returns the scene for the scene
+func (a *Actor) Scene() *Scene {
+	return a.scene
+}
+
+// SetScene sets the scene for the scene
+func (a *Actor) SetScene(scene *Scene) {
+	a.scene = scene
+}
+
+// SetStartEvent sets the start handler
+func (a *Actor) SetStartEvent(handler func()) {
+	a.startHandler = handler
+}
+
+// StartEvent triggers the start event handler for the scene and the current scene
+func (a *Actor) StartEvent() {
+	if a.startHandler != nil {
+		a.startHandler()
 	}
-	if d.IsRunning() {
-		if d.current != nil {
-			d.current.UpdateEvent(ticks)
-		}
+}
+
+// SetStopEvent sets the start handler
+func (a *Actor) SetStopEvent(handler func()) {
+	a.startHandler = handler
+}
+
+// StopEvent triggers the start event handler for the scene and the current scene
+func (a *Actor) StopEvent() {
+	if a.startHandler != nil {
+		a.startHandler()
 	}
 }
 
@@ -51,21 +62,9 @@ func (a *Actor) SetUpdateEvent(handler func(ticks uint32)) {
 	a.updateHandler = handler
 }
 
-// UpdateEvent triggers the update event handler for the director and the current actor
+// UpdateEvent triggers the update event handler for the scene and the current scene
 func (a *Actor) UpdateEvent(ticks uint32) {
 	if a.updateHandler != nil {
 		a.updateHandler(ticks)
-	}
-}
-
-// SetStartEvent sets the start handler
-func (a *Actor) SetStartEvent(handler func()) {
-	a.startHandler = handler
-}
-
-// StartEvent triggers the start event handler for the director and the current actor
-func (a *Actor) StartEvent() {
-	if a.startHandler != nil {
-		a.startHandler()
 	}
 }

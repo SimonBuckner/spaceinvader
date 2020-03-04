@@ -13,7 +13,7 @@ type Keyboard struct {
 	state1 []uint8
 }
 
-// NewKeyboard factory
+// NewKeyboard fsceney
 func NewKeyboard() *Keyboard {
 	kb := &Keyboard{}
 

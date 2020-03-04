@@ -6,21 +6,24 @@ import (
 
 // Prop represents an on-screen item.
 type Prop struct {
-	name    string
+	name string
+	Pos
+	speed   Pos
 	tex     *sdl.Texture
 	stage   *Stage
 	visible bool
 	scale   float32
-	pos     Pos
-	w, h    int
+
+	w, h int
 }
 
 // NewProp returns a new prop
 func NewProp(stage *Stage, name string, tex *sdl.Texture) *Prop {
 
-	prop := &Prop{
+	p := &Prop{
 		name:  name,
-		pos:   Pos{},
+		Pos:   Pos{},
+		speed: Pos{},
 		w:     0,
 		h:     0,
 		scale: stage.Scale(),
@@ -28,57 +31,44 @@ func NewProp(stage *Stage, name string, tex *sdl.Texture) *Prop {
 	}
 	if tex != nil {
 		_, _, w, h, _ := tex.Query()
-		prop.w = int(w)
-		prop.h = int(h)
-		prop.tex = tex
+		p.w = int(w)
+		p.h = int(h)
+		p.tex = tex
 	}
-	return prop
+	return p
 }
 
 // Name returns the name of the prop
-func (prop *Prop) Name() string {
-	return prop.name
+func (p *Prop) Name() string {
+	return p.name
 }
 
-// Pos returns the position of the proprop..
-func (prop *Prop) Pos() (x, y, z int32) {
-	x, y, z = prop.pos.X, prop.pos.Y, prop.pos.Z
-	return
+// Scale returns the scale fscene to use when drawing the p
+func (p *Prop) Scale() float32 {
+	return p.scale
 }
 
-// SetPos sets the prop position ..
-func (prop *Prop) SetPos(x, y, z int32) {
-	prop.pos.X = x
-	prop.pos.Y = y
-	prop.pos.Z = z
+// SetScale sets the scale fscene to use when drawing the p
+func (p *Prop) SetScale(scale float32) {
+	p.scale = scale
 }
 
-// Scale returns the scale factor to use when drawing the prop
-func (prop *Prop) Scale() float32 {
-	return prop.scale
+// Texture an p onto a rednerer ..
+func (p *Prop) Texture() *sdl.Texture {
+	return p.tex
 }
 
-// SetScale sets the scale factor to use when drawing the prop
-func (prop *Prop) SetScale(scale float32) {
-	prop.scale = scale
+// SetTexture an p onto a rednerer ..
+func (p *Prop) SetTexture(tex *sdl.Texture) {
+	p.tex = tex
 }
 
-// Texture an prop onto a rednerer ..
-func (prop *Prop) Texture() *sdl.Texture {
-	return prop.tex
-}
-
-// SetTexture an prop onto a rednerer ..
-func (prop *Prop) SetTexture(tex *sdl.Texture) {
-	prop.tex = tex
-}
-
-// Visible returns true if the prop should be visible on the screen
-func (prop *Prop) Visible() bool {
-	return prop.visible
+// Visible returns true if the p should be visible on the screen
+func (p *Prop) Visible() bool {
+	return p.visible
 }
 
 // SetVisible set the visibility of a Prop
-func (prop *Prop) SetVisible(visible bool) {
-	prop.visible = visible
+func (p *Prop) SetVisible(visible bool) {
+	p.visible = visible
 }

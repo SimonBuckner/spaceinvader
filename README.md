@@ -33,12 +33,20 @@ coordinates we can use in the game the following should be done.
 The alien rack is based on the bottom left hand (after rotation) alien. Starting
 Y coord for each round is. Once round 8 is reached, the aliens go no further.
 
-  Round 1 :  112
-  Round 2 :  128
-  Round 3 :  144
-  Round 4 :  152
-  Round 5 :  160
-  Round 6 :  160
-  Round 7 :  160
-  Round 8 :  160
+    Round 1 :  112
+    Round 2 :  128
+    Round 3 :  144
+    Round 4 :  152
+    Round 5 :  160
+    Round 6 :  160
+    Round 7 :  160
+    Round 8 :  160
   
+## Overview of GFX Library
+
+    Director  - The main controller of the application. 
+    Stage     - A windows on which objects are drawn
+    Scene     - A broad section of a game, e.g. credit scene, the main game, or just a level
+    Scene     - A distinct object in the game, e.g. a player, NPC or HUD
+    Script    - A state machine used by Scenes and Scenes
+    Prop      - A single object or texture o the screen

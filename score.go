@@ -22,21 +22,21 @@ type score struct {
 	props  []*gfx.Prop
 	digits []*sdl.Texture
 
-	gs     *gameState
+	game   *game
 	points int
 }
 
-func newScore(gs *gameState, pos scorePos) (*score, error) {
+func newScore(game *game, pos scorePos) (*score, error) {
 	s := &score{
-		gs:     gs,
 		points: 0,
 		props:  make([]*gfx.Prop, 4),
 		digits: make([]*sdl.Texture, 10),
+		game:   game,
 	}
 
 	keys := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
 	for i, k := range keys {
-		tex, err := alphabetAtlas.GetTexture(gs.stage, k)
+		tex, err := alphabetAtlas.GetTexture(game.stage, k)
 		if err != nil {
 			return nil, fmt.Errorf("error getting '%v' texture for score; %v", k, err)
 		}
@@ -47,10 +47,10 @@ func newScore(gs *gameState, pos scorePos) (*score, error) {
 	y := int32(2)
 	for i, prop := range s.props {
 		name := "score " + strconv.Itoa(int(i))
-		prop = gfx.NewProp(gs.stage, name, s.digits[0])
+		prop = gfx.NewProp(game.stage, name, s.digits[0])
 
-		newX, newY := gs.convertXY(x, y)
-		prop.SetPos(newX, newY, 0)
+		newX, newY := game.convertXY(x, y)
+		prop.SetInt32(newX, newY, 0)
 		s.props[i] = prop
 		x += fontWidth
 	}
@@ -65,7 +65,7 @@ func (s *score) update(ticks uint32) {
 	// 	return
 	// }
 	// if s.exploding == false {
-	// 	x, y := s.gs.convertXY(int32(s.x), int32(s.y))
+	// 	x, y := s.stage.convertXY(int32(s.x), int32(s.y))
 	// 	s.SetPos(int32(x), int32(y), 0)
 	// 	return
 	// }
@@ -110,7 +110,7 @@ func (s *score) Reset() {
 // 		return
 // 	}
 // 	if s.x > 0 {
-// 		s.x = s.x - float32(s.speed*s.gs.vs.ElapsedTime())
+// 		s.x = s.x - float32(s.speed*s.stage.vs.ElapsedTime())
 // 	}
 // }
 
@@ -120,6 +120,6 @@ func (s *score) Reset() {
 // 		return
 // 	}
 // 	if s.x < originalWidth {
-// 		s.x = s.x + float32(s.speed*s.gs.vs.ElapsedTime())
+// 		s.x = s.x + float32(s.speed*s.stage.vs.ElapsedTime())
 // 	}
 // }
