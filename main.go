@@ -44,20 +44,18 @@ func main() {
 }
 
 func (g *game) onKeyboard(e *sdl.KeyboardEvent) {
-	// fmt.Printf("Main  - onKeyboard\n")
 	if e.Type == sdl.KEYUP {
 		switch e.Keysym.Scancode {
 		case sdl.SCANCODE_Q:
 			g.stage.Stop()
 			return
 		case sdl.SCANCODE_D:
-			// g.stage.DumpActors()
+			g.stage.DumpActors()
 		case sdl.SCANCODE_F1:
-			// fmt.Printf("Main  - onKeyboard(F1)\n")
-			if g.stage.Scene == g.testScreen.scene {
+			if g.stage.Scene == g.testScreen.Scene {
 				g.stage.StopScene()
 			} else {
-				g.stage.StartScene(g.testScreen.scene)
+				g.stage.StartScene(g.testScreen.Scene)
 			}
 		}
 	}

@@ -8,32 +8,36 @@ import (
 const testScreenName = "Test Scene"
 
 type testScreen struct {
-	scene *gfx.Scene
-	game  *game
-	p1    *player
+	*gfx.Scene
+	game *game
+	p1   *player
+	t    *text
 }
 
 func newTestScene(game *game) *testScreen {
 
 	s := &testScreen{
+		Scene: gfx.NewScene(testScreenName),
 		game:  game,
-		scene: gfx.NewScene(testScreenName),
 		p1:    newPlayer(game),
+		t:     newText(game, "ABCDEFGHIJKLMNOPQRSTUVYXWZ01234567899 "),
 	}
-	s.scene.StartEventHandler = s.onStart
-	s.scene.StopEventHandler = s.onStop
-	s.scene.UpdateEventHandler = s.onUpdate
-	s.scene.KeyboardEventHandler = s.onKeyboard
+	s.StartEventHandler = s.onStart
+	s.StopEventHandler = s.onStop
+	s.UpdateEventHandler = s.onUpdate
+	s.KeyboardEventHandler = s.onKeyboard
 	return s
 }
 
 func (s *testScreen) onStart() {
-	s.scene.AddActor(s.p1.Actor)
+	s.AddActor(s.p1.Actor)
+	s.t.value = "SCORE P1"
+	s.AddActor(s.t.Actor)
 }
 
 func (s *testScreen) onStop() {
-	s.scene.RemoveActor(s.p1.Actor)
-
+	s.RemoveActor(s.p1.Actor)
+	s.RemoveActor(s.t.Actor)
 }
 
 func (s *testScreen) onKeyboard(e *sdl.KeyboardEvent) {
@@ -54,7 +58,7 @@ func (s *testScreen) onKeyboard(e *sdl.KeyboardEvent) {
 }
 
 func (s *testScreen) onUpdate(ticks uint32) {
-	kb := s.scene.KBState()
+	kb := s.KBState()
 
 	if kb.IsKeyDown(sdl.SCANCODE_LEFT) != kb.IsKeyDown(sdl.SCANCODE_RIGHT) {
 		if kb.IsKeyDown(sdl.SCANCODE_LEFT) {
@@ -64,4 +68,5 @@ func (s *testScreen) onUpdate(ticks uint32) {
 		}
 	}
 	s.p1.update(ticks)
+	s.t.update(ticks)
 }

@@ -1,82 +1,75 @@
 package main
 
-import (
-	"fmt"
+// type enemyClass int
 
-	"github.com/SimonBuckner/spaceinvader/gfx"
-	"github.com/veandco/go-sdl2/sdl"
-)
+// const (
+// 	enemyClassA enemyClass = iota
+// 	enemyClassB
+// 	enemyClassC
+// )
 
-type enemyClass int
+// type enemyStatus int
 
-const (
-	enemyClassA enemyClass = iota
-	enemyClassB
-	enemyClassC
-)
+// const (
+// 	livingEnemy enemyStatus = iota
+// 	hitEnemy
+// 	deadenemy
+// )
 
-type enemyStatus int
+// type enemyShip struct {
+// 	*gfx.Prop
 
-const (
-	livingEnemy enemyStatus = iota
-	hitEnemy
-	deadenemy
-)
+// 	liveTex1 *sdl.Texture
+// 	liveTex2 *sdl.Texture
+// 	hitTex   *sdl.Texture
 
-type enemyShip struct {
-	*gfx.Prop
+// 	class       enemyClass
+// 	state       enemyStatus
+// 	stateChange uint32
+// }
 
-	liveTex1 *sdl.Texture
-	liveTex2 *sdl.Texture
-	hitTex   *sdl.Texture
+// func newEnemyShip(stage *gfx.Stage, class enemyClass) (*enemyShip, error) {
+// 	ship := &enemyShip{
+// 		class: class,
+// 		state: livingEnemy,
+// 	}
 
-	class       enemyClass
-	state       enemyStatus
-	stateChange uint32
-}
+// 	switch class {
+// 	case enemyClassA:
+// 		ship.Prop = gfx.NewProp("alien_a", nil)
+// 		if err := ship.loadTextures(stage, alienSprA0, alienSprA1, alienExplode); err != nil {
+// 			return nil, err
+// 		}
+// 	case enemyClassB:
+// 		ship.Prop = gfx.NewProp("alien_b", nil)
+// 		if err := ship.loadTextures(stage, alienSprB0, alienSprB1, alienExplode); err != nil {
+// 			return nil, err
+// 		}
+// 	case enemyClassC:
+// 		ship.Prop = gfx.NewProp("alien_c", nil)
+// 		if err := ship.loadTextures(stage, alienSprC0, alienSprC1, alienExplode); err != nil {
+// 			return nil, err
+// 		}
+// 	}
 
-func newEnemyShip(stage *gfx.Stage, class enemyClass) (*enemyShip, error) {
-	ship := &enemyShip{
-		class: class,
-		state: livingEnemy,
-	}
+// 	ship.Texture = ship.liveTex1
+// 	return ship, nil
+// }
 
-	switch class {
-	case enemyClassA:
-		ship.Prop = gfx.NewProp("alien_a", nil)
-		if err := ship.loadTextures(stage, alienSprA0, alienSprA1, alienExplode); err != nil {
-			return nil, err
-		}
-	case enemyClassB:
-		ship.Prop = gfx.NewProp("alien_b", nil)
-		if err := ship.loadTextures(stage, alienSprB0, alienSprB1, alienExplode); err != nil {
-			return nil, err
-		}
-	case enemyClassC:
-		ship.Prop = gfx.NewProp("alien_c", nil)
-		if err := ship.loadTextures(stage, alienSprC0, alienSprC1, alienExplode); err != nil {
-			return nil, err
-		}
-	}
+// func (ship *enemyShip) loadTextures(stage *gfx.Stage, live1, live2, hit *gfx.Bitmap) error {
 
-	ship.Texture = ship.liveTex1
-	return ship, nil
-}
-
-func (ship *enemyShip) loadTextures(stage *gfx.Stage, live1, live2, hit *gfx.Bitmap) error {
-
-	var err error
-	ship.liveTex1, err = alienSprA0.ToTexture(stage)
-	if err != nil {
-		return fmt.Errorf("unable to load live1 bitmap")
-	}
-	ship.liveTex1, err = alienSprA0.ToTexture(stage)
-	if err != nil {
-		return fmt.Errorf("unable to load live2 bitmap")
-	}
-	ship.liveTex1, err = alienSprA0.ToTexture(stage)
-	if err != nil {
-		return fmt.Errorf("unable to load hit bitmap")
-	}
-	return nil
-}
+// 	var err error
+// 	ship.liveTex1, err = alienSprA0.ToTexture(stage)
+// 	if err != nil {
+// 		return fmt.Errorf("unable to load live1 bitmap")
+// 	}
+// 	ship.liveTex1, err = alienSprA0.ToTexture(stage)
+// 	if err != nil {
+// 		return fmt.Errorf("unable to load live2 bitmap")
+// 	}
+// 	ship.liveTex1, err = alienSprA0.ToTexture(stage)
+// 	if err != nil {
+// 		return fmt.Errorf("unable to load hit bitmap")
+// 	}
+// 	return nil
+// }
