@@ -7,17 +7,16 @@ import (
 
 type text struct {
 	*gfx.Actor
-	value    string
-	texMap   map[string]*sdl.Texture
-	display  []*gfx.Prop
-	reqChars string
+	value   string
+	texMap  map[string]*sdl.Texture
+	display []*gfx.Prop
 }
 
-func newText(game *game, reqChars string) *text {
+func newText(game *game, value string) *text {
 	t := &text{
-		Actor:    gfx.NewActor("text"),
-		texMap:   make(map[string]*sdl.Texture),
-		reqChars: reqChars,
+		Actor:  gfx.NewActor("text"),
+		texMap: make(map[string]*sdl.Texture),
+		value:  value,
 	}
 	t.StartEventHandler = t.onStart
 	t.StopEventHandler = t.onStop
@@ -27,8 +26,11 @@ func newText(game *game, reqChars string) *text {
 func (t *text) onStart() {
 	stage := t.Scene.Stage
 	t.Visible = true
-	for _, r := range t.reqChars {
+	for _, r := range t.value {
 		l := string(r)
+		if _, ok := t.texMap[l]; ok {
+			continue
+		}
 		tex, _ := alphabetAtlas.GetTexture(stage, l)
 		t.texMap[l] = tex
 	}
