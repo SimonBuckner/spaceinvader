@@ -1,139 +1,140 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 const (
-	playerStartX = 1
-	playerStartY = 250
+	playerHeight = 8
+	playerwidth  = 16
 	playerSpeed  = 60
+
+	// Start positions for player props
+	playerX = 1
+	playerY = originalHeight - playerHeight - 4
+	bankX   = 1
+	bankY   = originalHeight - playerHeight
+
+	startLives = 3
 )
 
 type player struct {
 	*gfx.Actor
-	prop        *gfx.Prop
-	game        *game
+	ship        *gfx.Prop
 	aliveTex    *sdl.Texture
 	explode1Tex *sdl.Texture
 	explode2Tex *sdl.Texture
 
 	score        int
-	lives        int
-	exploding    bool
+	extraAvail   bool
+	hit          bool
 	explodeCount int
+	lives        int
 	ticks        uint32
 }
 
-func newPlayer(game *game) (*player, error) {
+func newPlayer(game *game) *player {
 	p := &player{
-		Actor:        gfx.NewActor("player"),
-		game:         game,
-		score:        0,
-		lives:        3,
-		exploding:    false,
-		explodeCount: 0,
+		Actor: gfx.NewActor("player"),
+		ship:  gfx.NewProp("player ship", nil),
 	}
-
-	err := p.loadTextures(game.stage, playerSprite, plrBlowupSprite0, plrBlowupSprite1)
-	if err != nil {
-		return nil, err
-	}
-	p.prop = gfx.NewProp(game.stage, "player", p.aliveTex)
-	x, y := game.convertXY(playerStartX, playerStartY)
-	p.Pos.SetInt32(x, y, 0)
-	p.prop.SetInt32(x, y, 0)
-	p.Speed.Set(60, 0, 0)
-
-	return p, nil
+	p.StartEventHandler = p.onStart
+	p.StopEventHandler = p.onStop
+	return p
 }
 
-func (p *player) loadTextures(stage *gfx.Stage, alive, explode1, explode2 *gfx.Bitmap) error {
+func (p *player) onStart() {
+	stage := p.Scene.Stage
 
-	var err error
-	p.aliveTex, err = alive.ToTexture(stage)
-	if err != nil {
-		return fmt.Errorf("unable to load live1 bitmap")
-	}
-	p.explode1Tex, err = explode1.ToTexture(stage)
-	if err != nil {
-		return fmt.Errorf("unable to load live2 bitmap")
-	}
-	p.explode2Tex, err = explode2.ToTexture(stage)
-	if err != nil {
-		return fmt.Errorf("unable to load hit bitmap")
-	}
-	return nil
+	p.aliveTex, _ = playerSprite.ToTexture(stage)
+	p.explode1Tex, _ = plrBlowupSprite0.ToTexture(stage)
+	p.explode2Tex, _ = plrBlowupSprite1.ToTexture(stage)
+	p.reset()
+
+}
+
+func (p *player) onStop() {
+	p.RemoveProp(p.ship)
+}
+
+func (p *player) reset() {
+	p.Pos.SetInt32(playerX, playerY, 0)
+	p.score = 0
+	p.lives = 3
+	p.extraAvail = true
+	p.hit = false
+	p.explodeCount = 0
+	p.ticks = 0
+	p.ship.Texture = p.aliveTex
+	p.Visible = true
+	p.AddProp(p.ship)
 }
 
 func (p *player) update(ticks uint32) {
-
-	if p.lives == 0 {
-		p.prop.SetVisible(false)
+	if !p.Visible {
 		return
 	}
-	if p.exploding == false {
-		p.prop.Set(p.X, p.Y, p.Z)
+	x, y, _ := p.Pos.Int32()
+	x1, y1 := convertXY(p.Scene, x, y)
+	p.ship.Pos.SetInt32(x1, y1, 0)
+
+	if !p.hit {
 		return
 	}
 
-	if p.exploding && p.explodeCount >= 10 {
+	if p.explodeCount > 10 {
 		p.lives--
-		p.prop.SetVisible(false)
+		if p.lives > 0 {
+			p.hit = false
+			p.ship.Texture = p.aliveTex
+			return
+		}
+		p.setDead()
 		return
 	}
 
-	if ticks-p.ticks > (16 * 4) {
-		p.ticks = ticks
+	if ticks-p.ticks > 32 {
 		p.explodeCount++
+		p.ticks = ticks
 	}
 
 	if p.explodeCount%2 == 0 {
-		p.prop.SetTexture(p.explode1Tex)
+		p.ship.Texture = p.explode1Tex
 	} else {
-		p.prop.SetTexture(p.explode2Tex)
+		p.ship.Texture = p.explode2Tex
 	}
 }
 
-// Reset the player to a
-func (p *player) Reset() {
-	p.score = 0
-	p.lives = 3
-	p.exploding = false
-	p.explodeCount = 0
-	p.ticks = 0
-	x, _ := p.game.convertXY(playerStartX, 0)
-	p.SetX(float32(x))
-
-	p.prop.SetTexture(p.aliveTex)
-	p.prop.SetVisible(true)
-}
-
-// Hit indicates the player has been hit
-func (p *player) Hit() {
-	p.exploding = true
+func (p *player) setHit() {
+	p.hit = true
 	p.ticks = sdl.GetTicks()
+	p.explodeCount = 0
 }
 
-// MoveLeft moves the player left
-func (p *player) MoveLeft() {
-	if p.lives == 0 || p.exploding == true {
+func (p *player) setDead() {
+	p.Visible = false
+	p.RemoveProp(p.ship)
+}
+func (p *player) moveLeft() {
+
+	if p.lives == 0 || p.hit == true {
 		return
 	}
-	if p.X > 0 {
-		p.X = p.X - float32(p.Speed.X*p.game.stage.ElapsedTime())
+	if p.Pos.X > 0 {
+		p.Pos.X = p.Pos.X - float32(playerSpeed*p.Scene.ElapsedTime())
+		return
 	}
+	p.Pos.X = 0
 }
 
-// MoveRight moves the player right
-func (p *player) MoveRight() {
-	if p.lives == 0 || p.exploding == true {
+func (p *player) moveRight() {
+	if p.lives == 0 || p.hit == true {
 		return
 	}
-	if p.X < originalWidth {
-		p.X = p.X + float32(p.Speed.X*p.game.stage.ElapsedTime())
+	if p.Pos.X < originalWidth {
+		p.Pos.X = p.Pos.X + float32(playerSpeed*p.Scene.ElapsedTime())
+		return
 	}
+	p.Pos.X = originalWidth
 }

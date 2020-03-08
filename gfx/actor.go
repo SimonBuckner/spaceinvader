@@ -1,70 +1,96 @@
 package gfx
 
+import (
+	"github.com/veandco/go-sdl2/sdl"
+)
+
 // Actor represents a specific Actor in a game
 type Actor struct {
-	Pos
-	Speed         Pos
-	name          string
-	scene         *Scene
-	startHandler  func()
-	stopHandler   func()
-	updateHandler func(ticks uint32)
+	Name    string
+	Scene   *Scene
+	Props   []*Prop
+	Visible bool
+	Scale   float32
+	Pos     Vec3
+	Speed   Vec3
+
+	StartEventHandler func()
+	StopEventHandler  func()
 }
 
-// NewActor returns a new game Actor
+// NewActor factory
 func NewActor(name string) *Actor {
 	return &Actor{
-		name: name,
+		Name:    name,
+		Props:   make([]*Prop, 0),
+		Visible: false,
+		Scale:   1,
+		Pos:     Vec3{},
+		Speed:   Vec3{},
 	}
 }
 
-// Name ..
-func (a *Actor) Name() string {
-	return a.name
-}
-
-// Scene returns the scene for the scene
-func (a *Actor) Scene() *Scene {
-	return a.scene
-}
-
-// SetScene sets the scene for the scene
-func (a *Actor) SetScene(scene *Scene) {
-	a.scene = scene
-}
-
-// SetStartEvent sets the start handler
-func (a *Actor) SetStartEvent(handler func()) {
-	a.startHandler = handler
-}
-
-// StartEvent triggers the start event handler for the scene and the current scene
-func (a *Actor) StartEvent() {
-	if a.startHandler != nil {
-		a.startHandler()
+// Start the actor
+func (a *Actor) Start(scene *Scene) {
+	a.Scene = scene
+	if a.StartEventHandler != nil {
+		a.StartEventHandler()
 	}
 }
 
-// SetStopEvent sets the start handler
-func (a *Actor) SetStopEvent(handler func()) {
-	a.startHandler = handler
+// Stop the actor
+func (a *Actor) Stop() {
+	if a.StopEventHandler != nil {
+		a.StopEventHandler()
+	}
+	a.Scene = nil
 }
 
-// StopEvent triggers the start event handler for the scene and the current scene
-func (a *Actor) StopEvent() {
-	if a.startHandler != nil {
-		a.startHandler()
+// Draw draws all props the actor is holding
+func (a *Actor) Draw() {
+	if !a.Visible {
+		return
+	}
+
+	for _, prop := range a.Props {
+		if prop.Texture == nil {
+			continue
+		}
+
+		tex := prop.Texture
+		_, _, w, h, _ := tex.Query()
+		x, y, _ := prop.Pos.Int32()
+
+		dstRect := sdl.Rect{
+			X: x,
+			Y: y,
+			W: int32(float32(w) * prop.Scale),
+			H: int32(float32(h) * prop.Scale),
+		}
+		a.Scene.Renderer().Copy(tex, nil, &dstRect)
 	}
 }
 
-// SetUpdateEvent sets the update handler
-func (a *Actor) SetUpdateEvent(handler func(ticks uint32)) {
-	a.updateHandler = handler
+// AddProp adds a prop to an actor
+func (a *Actor) AddProp(prop *Prop) {
+	if prop == nil {
+		panic("AddProp is nil")
+	}
+	prop.Scale = a.Scale
+	a.Props = append(a.Props, prop)
 }
 
-// UpdateEvent triggers the update event handler for the scene and the current scene
-func (a *Actor) UpdateEvent(ticks uint32) {
-	if a.updateHandler != nil {
-		a.updateHandler(ticks)
+// RemoveProp removes a prop from an actor
+func (a *Actor) RemoveProp(prop *Prop) {
+	for i, p := range a.Props {
+		if p == prop {
+			a.Props = append(a.Props[:i], a.Props[i+1:]...)
+			return
+		}
 	}
+}
+
+// ClearProps removes all props
+func (a *Actor) ClearProps() {
+	a.Props = make([]*Prop, 0)
 }

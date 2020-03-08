@@ -1,89 +1,110 @@
 package gfx
 
-import "github.com/veandco/go-sdl2/sdl"
+import (
+	"github.com/veandco/go-sdl2/sdl"
+)
 
 // Scene represents a specific Scene in a game
 type Scene struct {
-	name     string
-	stage    *Stage
-	renderer *sdl.Renderer
+	Name   string
+	Stage  *Stage
+	Actors []*Actor
 
-	keyboardHandler func(e *sdl.KeyboardEvent)
-	// mouseButtonHandler func(e *sdl.MouseButtonEvent)
-	// mouseMotionHandler func(e *sdl.MouseMotionEvent)
-	// mouseWheelHandler  func(e *sdl.MouseWheelEvent)
-	updateHandler func(ticks uint32)
+	KeyboardEventHandler    func(e *sdl.KeyboardEvent)
+	MouseButtonEventHandler func(e *sdl.MouseButtonEvent)
+	MouseMotionEventHandler func(e *sdl.MouseMotionEvent)
+	MouseWheelEventHandler  func(e *sdl.MouseWheelEvent)
 
-	startHandler func()
-	stopHandler  func()
+	StartEventHandler  func()
+	UpdateEventHandler func(ticks uint32)
+	StopEventHandler   func()
 }
 
 // NewScene returns a new game Scene
 func NewScene(name string) *Scene {
 	return &Scene{
-		name: name,
+		Name:   name,
+		Actors: make([]*Actor, 0),
 	}
 }
 
-// Name ..
-func (s *Scene) Name() string {
-	return s.name
+// KBState returns the keyboard
+func (s *Scene) KBState() *KBState {
+	return s.Stage.KBState
 }
 
-// Renderer ..
+// Renderer returns the current renderer
 func (s *Scene) Renderer() *sdl.Renderer {
-	return s.renderer
+	return s.Stage.Renderer
 }
 
-// SetStage set the stage the scene will unfold on
-func (s *Scene) SetStage(stage *Stage) {
-	s.stage = stage
+// ElapsedTime returns the legnth of the last from in MS
+func (s *Scene) ElapsedTime() float32 {
+	return s.Stage.ElapsedTime
 }
 
-// SetKeyboardEvent sets the keyboard handler
-func (s *Scene) SetKeyboardEvent(handler func(e *sdl.KeyboardEvent)) {
-	s.keyboardHandler = handler
+// Scale returns the default scale factor
+func (s *Scene) Scale() float32 {
+	return s.Stage.Scale
 }
 
-// KeyboardEvent triggers the keyboard event handler for the director and the current scene
-func (s *Scene) KeyboardEvent(e *sdl.KeyboardEvent) {
-	if s.keyboardHandler != nil {
-		s.keyboardHandler(e)
+// Start starts the scene on the specified stage
+func (s *Scene) Start(stage *Stage) {
+	s.Stage = stage
+	if s.StartEventHandler != nil {
+		s.StartEventHandler()
+		for _, a := range s.Actors {
+			a.Start(s)
+		}
 	}
 }
 
-// SetUpdateEvent sets the update handler
-func (s *Scene) SetUpdateEvent(handler func(ticks uint32)) {
-	s.updateHandler = handler
+// Stop stops the running scene
+func (s *Scene) Stop() {
+	if s.StopEventHandler != nil {
+		for _, a := range s.Actors {
+			a.Stop()
+		}
+		s.StopEventHandler()
+	}
+	s.Stage = nil
 }
 
-// UpdateEvent triggers the update event handler for the director and the current scene
-func (s *Scene) UpdateEvent(ticks uint32) {
-	if s.updateHandler != nil {
-		s.updateHandler(ticks)
+// AddActor adds a actor to the scene
+func (s *Scene) AddActor(actor *Actor) {
+	actor.Scene = s
+	actor.Scale = s.Scale()
+	s.Actors = append(s.Actors, actor)
+}
+
+// RemoveActor removes a actor from the scene
+func (s *Scene) RemoveActor(actor *Actor) {
+	for i, p := range s.Actors {
+		if p == actor {
+			s.Actors = append(s.Actors[:i], s.Actors[i+1:]...)
+			actor.Scene = nil
+			return
+		}
 	}
 }
 
-// SetStartEvent sets the start handler
-func (s *Scene) SetStartEvent(handler func()) {
-	s.startHandler = handler
-}
-
-// StartEvent triggers the start event handler for the director and the current scene
-func (s *Scene) StartEvent() {
-	if s.startHandler != nil {
-		s.startHandler()
+// Draw draws the supplied props into the specified Stage
+func (s *Scene) Draw() {
+	for _, a := range s.Actors {
+		a.Draw()
 	}
 }
 
-// SetStopEvent sets the start handler
-func (s *Scene) SetStopEvent(handler func()) {
-	s.startHandler = handler
+// FireKeyboardEvent triggers the keyboard event handler for the director and the current scene
+func (s *Scene) FireKeyboardEvent(e *sdl.KeyboardEvent) {
+	if s.KeyboardEventHandler != nil {
+		s.KeyboardEventHandler(e)
+	}
 }
 
-// StopEvent triggers the start event handler for the director and the current scene
-func (s *Scene) StopEvent() {
-	if s.startHandler != nil {
-		s.startHandler()
+// FireUpdateEvent triggers the update event handler for the director and the current scene
+func (s *Scene) FireUpdateEvent(ticks uint32) {
+	if s.UpdateEventHandler != nil {
+		s.UpdateEventHandler(ticks)
 	}
 }

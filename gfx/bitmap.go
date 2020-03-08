@@ -35,9 +35,10 @@ func (bm *Bitmap) ToTexture(stage *Stage) (*sdl.Texture, error) {
 		pixels[i] = c.A
 		i++
 	}
-	tex, err := stage.Renderer().CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, int32(w), int32(h))
+	tex, err := stage.Renderer.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STATIC, int32(w), int32(h))
 	if err != nil {
-		return nil, err
+		panic(err)
+		// return nil, err
 	}
 	tex.Update(nil, pixels, w*4)
 	return tex, nil

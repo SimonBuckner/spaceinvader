@@ -16,7 +16,7 @@ const (
 // Drawable represents nd object that can be drawn by a renderer
 type Drawable interface {
 	Texture() *sdl.Texture
-	Pos() (x, y, z int32)
+	Vec3() (x, y, z int32)
 	Scale() float32
 	IsVisible() bool
 }
@@ -53,78 +53,150 @@ func HexColorToRGBA(color int) *sdl.Color {
 	}
 }
 
-// Pos represents the position of an item
-type Pos struct {
+// Vec3 represents the position of an item
+type Vec3 struct {
 	X, Y, Z float32
 }
 
 // Int32 returns the position as int32
-func (p *Pos) Int32() (x, y, z int32) {
+func (p *Vec3) Int32() (x, y, z int32) {
 	return int32(p.X), int32(p.Y), int32(p.Z)
 }
 
 // Float32 returns the position as float32
-func (p *Pos) Float32() (x, y, z float32) {
+func (p *Vec3) Float32() (x, y, z float32) {
 	return p.X, p.Y, p.Z
 }
 
-// PosInt32 returns the pos as int32
-func (p *Pos) PosInt32() (x, y, z int32) {
+// Vec3Int32 returns the pos as int32
+func (p *Vec3) Vec3Int32() (x, y, z int32) {
 	return int32(p.X), int32(p.Y), int32(p.Z)
 }
 
-// PosFloat32 returns the pos as float32
-func (p *Pos) PosFloat32() (x, y, z float32) {
+// Vec3Float32 returns the pos as float32
+func (p *Vec3) Vec3Float32() (x, y, z float32) {
 	return p.X, p.Y, p.Z
 }
 
-// MovePos moves the position by +/- x, y, z
-func (p *Pos) MovePos(x, y, z float32) {
+// MoveVec3 moves the position by +/- x, y, z
+func (p *Vec3) MoveVec3(x, y, z float32) {
 	p.X += x
 	p.Y += y
 	p.Z += z
 }
 
 // MoveX moves the X pos by +/- x
-func (p *Pos) MoveX(x float32) {
+func (p *Vec3) MoveX(x float32) {
 	p.X += x
 }
 
 // MoveY moves the Y pos by +/- x
-func (p *Pos) MoveY(y float32) {
+func (p *Vec3) MoveY(y float32) {
 	p.Y += y
 }
 
 // MoveZ moves the Z pos by +/- x
-func (p *Pos) MoveZ(z float32) {
+func (p *Vec3) MoveZ(z float32) {
 	p.Z += z
 }
 
 // SetX sets the X pos
-func (p *Pos) SetX(x float32) {
+func (p *Vec3) SetX(x float32) {
 	p.X = x
 }
 
 // SetY sets the Y pos
-func (p *Pos) SetY(y float32) {
+func (p *Vec3) SetY(y float32) {
 	p.Y = y
 }
 
 // SetZ sets the Z pos
-func (p *Pos) SetZ(z float32) {
+func (p *Vec3) SetZ(z float32) {
 	p.Z = z
 }
 
 // Set sets the pos
-func (p *Pos) Set(x, y, z float32) {
+func (p *Vec3) Set(x, y, z float32) {
 	p.X = x
 	p.Y = y
 	p.Z = z
 }
 
 // SetInt32 sets the pos
-func (p *Pos) SetInt32(x, y, z int32) {
+func (p *Vec3) SetInt32(x, y, z int32) {
 	p.X = float32(x)
 	p.Y = float32(y)
 	p.Z = float32(z)
+}
+
+// Prop represents an on-screen item.
+type Prop struct {
+	Name    string
+	Pos     Vec3
+	Speed   Vec3
+	Texture *sdl.Texture
+	Scale   float32
+
+	Width  int32
+	Height int32
+}
+
+// NewProp factory
+func NewProp(name string, texture *sdl.Texture) *Prop {
+	return &Prop{
+		Name:    name,
+		Texture: texture,
+		Pos:     Vec3{},
+		Speed:   Vec3{},
+		Scale:   1,
+	}
+}
+
+const (
+	keyUp   uint8 = 0
+	keyDown uint8 = 1
+)
+
+// KBState represents the state of the keyboard
+type KBState struct {
+	state  []uint8
+	state1 []uint8
+}
+
+// NewKBState fsceney
+func NewKBState() *KBState {
+	kb := &KBState{}
+
+	kb.state = sdl.GetKeyboardState()
+	kb.state1 = make([]uint8, len(kb.state))
+
+	return kb
+}
+
+// Refresh the keyboard state
+func (kb *KBState) Refresh() {
+	for i, v := range kb.state {
+		kb.state1[i] = v
+	}
+	kb.state = sdl.GetKeyboardState()
+}
+
+// OnKeyDown returns true when the key state changes from up to down
+func (kb *KBState) OnKeyDown(key uint8) bool {
+	return kb.state[key] == keyDown && kb.state1[key] == keyUp
+}
+
+// OnKeyUp returns true when the key state changes from up to down
+func (kb *KBState) OnKeyUp(key uint8) bool {
+	return kb.state[key] == keyUp && kb.state1[key] == keyDown
+}
+
+// IsKeyDown returns true if the key state is down
+func (kb *KBState) IsKeyDown(key uint8) bool {
+	return kb.state[key] == keyDown
+}
+
+// IsKeyUp returns true if the key state is up
+func (kb *KBState) IsKeyUp(key uint8) bool {
+	return kb.state[key] == keyUp
 }

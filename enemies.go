@@ -43,23 +43,23 @@ func newEnemyShip(stage *gfx.Stage, class enemyClass) (*enemyShip, error) {
 
 	switch class {
 	case enemyClassA:
-		ship.Prop = gfx.NewProp(stage, "alien_a", nil)
+		ship.Prop = gfx.NewProp("alien_a", nil)
 		if err := ship.loadTextures(stage, alienSprA0, alienSprA1, alienExplode); err != nil {
 			return nil, err
 		}
 	case enemyClassB:
-		ship.Prop = gfx.NewProp(stage, "alien_b", nil)
+		ship.Prop = gfx.NewProp("alien_b", nil)
 		if err := ship.loadTextures(stage, alienSprB0, alienSprB1, alienExplode); err != nil {
 			return nil, err
 		}
 	case enemyClassC:
-		ship.Prop = gfx.NewProp(stage, "alien_c", nil)
+		ship.Prop = gfx.NewProp("alien_c", nil)
 		if err := ship.loadTextures(stage, alienSprC0, alienSprC1, alienExplode); err != nil {
 			return nil, err
 		}
 	}
 
-	ship.SetTexture(ship.liveTex1)
+	ship.Texture = ship.liveTex1
 	return ship, nil
 }
 
