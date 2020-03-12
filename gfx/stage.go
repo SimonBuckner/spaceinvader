@@ -7,14 +7,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// Actorer discribes an object that can be started, stopped, drawn and updated
-type Actorer interface {
-	Start(*Scene)
-	Stop()
-	Update(uint32)
-	Draw()
-}
-
 // Stage represents a single Window
 type Stage struct {
 	Title    string
@@ -194,10 +186,10 @@ func (s *Stage) NewSinglePixelTexture(r, g, b, a uint8) (*sdl.Texture, error) {
 
 // DumpActors dumps out basic details about loaded props
 func (s *Stage) DumpActors() {
-	fmt.Println("index  name                     x     y visible")
-	fmt.Println("=====  ====================  ====  ==== =======")
-	for i, a := range s.Scene.Actors {
-		x, y, _ := a.Pos.Int32()
-		fmt.Printf(" %3d   %-20v  %4d  %4d %v\n", i, a.Name, x, y, a.Visible)
-	}
+	// fmt.Println("index  name                     x     y visible")
+	// fmt.Println("=====  ====================  ====  ==== =======")
+	// for i, a := range s.Scene.Actors {
+	// 	x, y, _ := a.Pos.Int32()
+	// 	fmt.Printf(" %3d   %-20v  %4d  %4d %v\n", i, a.Name, x, y, a.Visible)
+	// }
 }

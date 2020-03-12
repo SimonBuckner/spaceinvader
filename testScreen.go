@@ -31,8 +31,8 @@ func newTestScene(game *game) *testScreen {
 }
 
 func (s *testScreen) onStart() {
-	s.AddActor(s.p1.Actor)
-	s.AddActor(s.score.Actor)
+	s.AddActor(s.p1)
+	s.AddActor(s.score)
 
 }
 

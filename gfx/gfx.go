@@ -152,6 +152,24 @@ func NewProp(name string, texture *sdl.Texture) *Prop {
 	}
 }
 
+// Draw renders the props texture to the screen
+func (p *Prop) Draw(renderer *sdl.Renderer) {
+	if p.Texture == nil {
+		return
+	}
+
+	_, _, w, h, _ := p.Texture.Query()
+	x, y, _ := p.Pos.Int32()
+
+	dstRect := &sdl.Rect{
+		X: x,
+		Y: y,
+		W: int32(float32(w) * p.Scale),
+		H: int32(float32(h) * p.Scale),
+	}
+	renderer.Copy(p.Texture, nil, dstRect)
+}
+
 const (
 	keyUp   uint8 = 0
 	keyDown uint8 = 1

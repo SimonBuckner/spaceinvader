@@ -5,72 +5,67 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-type text struct {
+type banner struct {
 	*gfx.Actor
-	value      string
-	cacheChars string
-	texMap     map[string]*sdl.Texture
-	display    []*gfx.Prop
-	maxLength  int
+	text      string
+	cacheText string
+	texMap    map[string]*sdl.Texture
+	props     []*gfx.Prop
 }
 
-func newText(game *game, cacheChars string, value string, maxLength int) *text {
-	// fmt.Println("newText")
-	t := &text{
-		Actor:      gfx.NewActor("text"),
-		cacheChars: cacheChars,
-		value:      value,
-		texMap:     make(map[string]*sdl.Texture),
-		maxLength:  maxLength,
-		display:    make([]*gfx.Prop, maxLength),
+func newBanner(game *game, cacheChars string, text string, maxLength int) *banner {
+	t := &banner{
+		Actor:     gfx.NewActor("text"),
+		cacheText: cacheChars,
+		text:      text,
+		texMap:    make(map[string]*sdl.Texture),
+		props:     make([]*gfx.Prop, maxLength),
 	}
-	t.StartEventHandler = t.onStart
-	t.StopEventHandler = t.onStop
-	t.UpdateEventHandler = t.onUpdate
 	return t
 }
 
-func (t *text) onStart() {
-	// fmt.Println("newText:onStart")
-	stage := t.Scene.Stage
-	t.Visible = true
-	for _, r := range t.cacheChars {
+func (b *banner) Start(scene *gfx.Scene) {
+	b.Scene = scene
+	b.Scale = scene.Scale()
+	stage := scene.Stage
+	b.Visible = true
+	for _, r := range b.cacheText {
 		l := string(r)
-		if _, ok := t.texMap[l]; ok {
+		if _, ok := b.texMap[l]; ok {
 			continue
 		}
 		tex, _ := alphabetAtlas.GetTexture(stage, l)
-		t.texMap[l] = tex
+		b.texMap[l] = tex
 	}
-
+	for i := 0; i < len(b.props); i++ {
+		b.props[i] = gfx.NewProp("banner", nil)
+		b.props[i].Scale = b.Scale
+	}
 }
 
-func (t *text) onStop() {
-	// fmt.Println("newText:onStop")
-	t.ClearProps()
-	t.texMap = make(map[string]*sdl.Texture)
-}
-
-func (t *text) onUpdate(ticks uint32) {
+func (b *banner) Update(ticks uint32) {
 	// fmt.Println("newText:onUpdate")
-	if !t.Visible {
+	if !b.Visible {
 		return
 	}
 
-	x, y, _ := t.Pos.Int32()
+	x, y, _ := b.Pos.Int32()
 
-	for _, r := range t.value {
-		x1, y1 := convertXY(t.Scene, x, y)
+	for i, r := range b.text {
+		x1, y1 := convertXY(b.Scene, x, y)
 
-		tex := t.texMap[string(r)]
-
-		p := gfx.NewProp(string(r), tex)
+		tex := b.texMap[string(r)]
+		p := b.props[i]
 		p.Pos.SetInt32(x1, y1, 0)
-		p.Scale = t.Scale
-
-		t.AddProp(p)
+		p.Texture = b.texMap[string(r)]
 
 		_, _, w, _, _ := tex.Query()
 		x += w
+	}
+}
+
+func (b *banner) Draw() {
+	for _, p := range b.props {
+		p.Draw(b.Scene.Renderer())
 	}
 }

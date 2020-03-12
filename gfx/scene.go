@@ -4,11 +4,19 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// Actors are objects that can be drawn
+type Actors interface {
+	SetScale(float32)
+	Start(*Scene)
+	Update(ticks uint32)
+	Draw()
+}
+
 // Scene represents a specific Scene in a game
 type Scene struct {
 	Name   string
 	Stage  *Stage
-	Actors []*Actor
+	Actors []Actors
 
 	KeyboardEventHandler    func(e *sdl.KeyboardEvent)
 	MouseButtonEventHandler func(e *sdl.MouseButtonEvent)
@@ -24,7 +32,7 @@ type Scene struct {
 func NewScene(name string) *Scene {
 	return &Scene{
 		Name:   name,
-		Actors: make([]*Actor, 0),
+		Actors: make([]Actors, 0),
 	}
 }
 
@@ -54,16 +62,10 @@ func (s *Scene) Start(stage *Stage) {
 	if s.StartEventHandler != nil {
 		s.StartEventHandler()
 	}
-	for _, a := range s.Actors {
-		a.Start(s)
-	}
 }
 
 // Stop stops the running scene
 func (s *Scene) Stop() {
-	for _, a := range s.Actors {
-		a.Stop()
-	}
 	if s.StopEventHandler != nil {
 		s.StopEventHandler()
 	}
@@ -71,18 +73,16 @@ func (s *Scene) Stop() {
 }
 
 // AddActor adds a actor to the scene
-func (s *Scene) AddActor(actor *Actor) {
-	actor.Scene = s
-	actor.Scale = s.Scale()
+func (s *Scene) AddActor(actor Actors) {
+	actor.Start(s)
 	s.Actors = append(s.Actors, actor)
 }
 
 // RemoveActor removes a actor from the scene
-func (s *Scene) RemoveActor(actor *Actor) {
+func (s *Scene) RemoveActor(actor Actors) {
 	for i, p := range s.Actors {
 		if p == actor {
 			s.Actors = append(s.Actors[:i], s.Actors[i+1:]...)
-			actor.Scene = nil
 			return
 		}
 	}
@@ -90,10 +90,7 @@ func (s *Scene) RemoveActor(actor *Actor) {
 
 // ClearActors removes all actors
 func (s *Scene) ClearActors() {
-	for _, a := range s.Actors {
-		a.Scene = nil
-	}
-	s.Actors = make([]*Actor, 0)
+	s.Actors = make([]Actors, 0)
 }
 
 // Draw draws the supplied props into the specified Stage

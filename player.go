@@ -13,8 +13,6 @@ const (
 	// Start positions for player props
 	playerX = 1
 	playerY = originalHeight - (playerHeight * 4)
-	// bankX   = 1
-	// bankY   = originalHeight - playerHeight
 
 	startLives = 3
 )
@@ -41,14 +39,15 @@ func newPlayer(game *game) *player {
 		Actor: gfx.NewActor("player"),
 		ship:  gfx.NewProp("player ship", nil),
 	}
-	p.StartEventHandler = p.onStart
-	p.StopEventHandler = p.onStop
-	p.UpdateEventHandler = p.onUpdate
 	return p
 }
 
-func (p *player) onStart() {
-	stage := p.Scene.Stage
+func (p *player) Start(scene *gfx.Scene) {
+	p.Scene = scene
+	p.Scale = scene.Scale()
+	p.ship.Scale = scene.Scale()
+
+	stage := scene.Stage
 
 	p.aliveTex, _ = playerSprite.ToTexture(stage)
 	p.explode1Tex, _ = plrBlowupSprite0.ToTexture(stage)
@@ -63,31 +62,15 @@ func (p *player) onStart() {
 
 }
 
-func (p *player) onStop() {
-	p.RemoveProp(p.ship)
-}
-
-func (p *player) reset() {
-	p.Pos.SetInt32(playerX, playerY, 0)
-	p.score = 0
-	p.lives = 3
-	p.extraAvail = true
-	p.hit = false
-	p.explodeCount = 0
-	p.ticks = 0
-	p.ship.Texture = p.aliveTex
-	p.Visible = true
-	p.AddProp(p.ship)
-}
-
-func (p *player) onUpdate(ticks uint32) {
+// Update ..
+func (p *player) Update(ticks uint32) {
 	if !p.Visible {
 		return
 	}
 	x, y, _ := p.Pos.Int32()
 	x1, y1 := convertXY(p.Scene, x, y)
 	p.ship.Pos.SetInt32(x1, y1, 0)
-
+	// fmt.Printf("ship x1: %d y1: %d / x2: %d / y2: %d\n", x, y, x1, y1)
 	if !p.hit {
 		return
 	}
@@ -115,6 +98,23 @@ func (p *player) onUpdate(ticks uint32) {
 	}
 }
 
+// Draw ..
+func (p *player) Draw() {
+	p.ship.Draw(p.Scene.Renderer())
+}
+
+func (p *player) reset() {
+	p.Pos.SetInt32(playerX, playerY, 0)
+	p.score = 0
+	p.lives = 3
+	p.extraAvail = true
+	p.hit = false
+	p.explodeCount = 0
+	p.ticks = 0
+	p.ship.Texture = p.aliveTex
+	p.Visible = true
+}
+
 func (p *player) setHit() {
 	p.hit = true
 	p.ticks = sdl.GetTicks()
@@ -123,8 +123,8 @@ func (p *player) setHit() {
 
 func (p *player) setDead() {
 	p.Visible = false
-	p.RemoveProp(p.ship)
 }
+
 func (p *player) moveLeft() {
 
 	if p.lives == 0 || p.hit == true {
