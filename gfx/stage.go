@@ -7,6 +7,14 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// Actorer discribes an object that can be started, stopped, drawn and updated
+type Actorer interface {
+	Start(*Scene)
+	Stop()
+	Update(uint32)
+	Draw()
+}
+
 // Stage represents a single Window
 type Stage struct {
 	Title    string
@@ -20,9 +28,14 @@ type Stage struct {
 	Height int32
 	Scale  float32
 
-	FrameStart  time.Time
+	// FramesCount int32
+	// FrameStart  time.Time
 	ElapsedTime float32
-	Stopping    bool
+
+	FPSStart time.Time
+	FPSCount int
+	FPS      int
+	Stopping bool
 
 	KeyboardEventHandler func(e *sdl.KeyboardEvent)
 
@@ -74,7 +87,12 @@ func (s *Stage) Destroy() {
 
 // Start the main event loop for the Stage..
 func (s *Stage) Start() {
+	s.FPSCount = 0
+	s.FPS = 0
+	s.FPSStart = time.Now()
+
 	var frameStart time.Time
+
 	for {
 		if s.Stopping {
 			return
@@ -104,6 +122,14 @@ func (s *Stage) Start() {
 		s.Renderer.Present()
 		sdl.Delay(1)
 		s.ElapsedTime = float32(time.Since(frameStart).Seconds())
+		s.FPSCount++
+		if time.Since(s.FPSStart) > time.Second {
+			s.FPS = s.FPSCount
+			s.FPSStart = time.Now()
+			s.FPSCount = 0
+			fmt.Printf("Frames per second : %d\n", s.FPS)
+		}
+
 	}
 }
 

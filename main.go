@@ -1,7 +1,11 @@
 package main
 
 import (
+	"flag"
+	"log"
+	"os"
 	"runtime"
+	"runtime/pprof"
 
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
@@ -16,6 +20,8 @@ const (
 	alienCols      = 11
 )
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 type game struct {
 	stage           *gfx.Stage
 	backgroundColor sdl.Color
@@ -24,6 +30,16 @@ type game struct {
 
 func main() {
 	runtime.LockOSThread()
+
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	game := &game{
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
@@ -80,8 +96,8 @@ func convertXY(scene *gfx.Scene, x, y int32) (int32, int32) {
 	offsetX := (float32(w) - ow) / 2
 	offsetY := (float32(h) - oh) / 2
 
-	newX := int32(offsetX + (float32(x) * scene.Stage.Scale))
-	newY := int32(offsetY + (float32(y) * scene.Stage.Scale))
+	newX := float32(x) * scene.Stage.Scale
+	newY := float32(y) * scene.Stage.Scale
 
-	return newX, newY
+	return int32(newX + offsetX), int32(newY + offsetY)
 }

@@ -7,26 +7,34 @@ import (
 
 type text struct {
 	*gfx.Actor
-	value   string
-	texMap  map[string]*sdl.Texture
-	display []*gfx.Prop
+	value      string
+	cacheChars string
+	texMap     map[string]*sdl.Texture
+	display    []*gfx.Prop
+	maxLength  int
 }
 
-func newText(game *game, value string) *text {
+func newText(game *game, cacheChars string, value string, maxLength int) *text {
+	// fmt.Println("newText")
 	t := &text{
-		Actor:  gfx.NewActor("text"),
-		texMap: make(map[string]*sdl.Texture),
-		value:  value,
+		Actor:      gfx.NewActor("text"),
+		cacheChars: cacheChars,
+		value:      value,
+		texMap:     make(map[string]*sdl.Texture),
+		maxLength:  maxLength,
+		display:    make([]*gfx.Prop, maxLength),
 	}
 	t.StartEventHandler = t.onStart
 	t.StopEventHandler = t.onStop
+	t.UpdateEventHandler = t.onUpdate
 	return t
 }
 
 func (t *text) onStart() {
+	// fmt.Println("newText:onStart")
 	stage := t.Scene.Stage
 	t.Visible = true
-	for _, r := range t.value {
+	for _, r := range t.cacheChars {
 		l := string(r)
 		if _, ok := t.texMap[l]; ok {
 			continue
@@ -34,14 +42,17 @@ func (t *text) onStart() {
 		tex, _ := alphabetAtlas.GetTexture(stage, l)
 		t.texMap[l] = tex
 	}
+
 }
 
 func (t *text) onStop() {
+	// fmt.Println("newText:onStop")
 	t.ClearProps()
 	t.texMap = make(map[string]*sdl.Texture)
 }
 
-func (t *text) update(ticks uint32) {
+func (t *text) onUpdate(ticks uint32) {
+	// fmt.Println("newText:onUpdate")
 	if !t.Visible {
 		return
 	}

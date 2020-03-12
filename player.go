@@ -12,9 +12,9 @@ const (
 
 	// Start positions for player props
 	playerX = 1
-	playerY = originalHeight - playerHeight - 4
-	bankX   = 1
-	bankY   = originalHeight - playerHeight
+	playerY = originalHeight - (playerHeight * 4)
+	// bankX   = 1
+	// bankY   = originalHeight - playerHeight
 
 	startLives = 3
 )
@@ -32,6 +32,8 @@ type player struct {
 	explodeCount int
 	lives        int
 	ticks        uint32
+	width        int32
+	height       int32
 }
 
 func newPlayer(game *game) *player {
@@ -41,6 +43,7 @@ func newPlayer(game *game) *player {
 	}
 	p.StartEventHandler = p.onStart
 	p.StopEventHandler = p.onStop
+	p.UpdateEventHandler = p.onUpdate
 	return p
 }
 
@@ -50,6 +53,12 @@ func (p *player) onStart() {
 	p.aliveTex, _ = playerSprite.ToTexture(stage)
 	p.explode1Tex, _ = plrBlowupSprite0.ToTexture(stage)
 	p.explode2Tex, _ = plrBlowupSprite1.ToTexture(stage)
+
+	_, _, w, h, _ := p.aliveTex.Query()
+
+	p.width = w
+	p.height = h
+
 	p.reset()
 
 }
@@ -71,7 +80,7 @@ func (p *player) reset() {
 	p.AddProp(p.ship)
 }
 
-func (p *player) update(ticks uint32) {
+func (p *player) onUpdate(ticks uint32) {
 	if !p.Visible {
 		return
 	}
@@ -132,9 +141,9 @@ func (p *player) moveRight() {
 	if p.lives == 0 || p.hit == true {
 		return
 	}
-	if p.Pos.X < originalWidth {
+	if int32(p.Pos.X)+p.width < originalWidth {
 		p.Pos.X = p.Pos.X + float32(playerSpeed*p.Scene.ElapsedTime())
 		return
 	}
-	p.Pos.X = originalWidth
+	p.Pos.X = float32(originalWidth - p.width)
 }

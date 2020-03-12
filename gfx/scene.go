@@ -53,18 +53,18 @@ func (s *Scene) Start(stage *Stage) {
 	s.Stage = stage
 	if s.StartEventHandler != nil {
 		s.StartEventHandler()
-		for _, a := range s.Actors {
-			a.Start(s)
-		}
+	}
+	for _, a := range s.Actors {
+		a.Start(s)
 	}
 }
 
 // Stop stops the running scene
 func (s *Scene) Stop() {
+	for _, a := range s.Actors {
+		a.Stop()
+	}
 	if s.StopEventHandler != nil {
-		for _, a := range s.Actors {
-			a.Stop()
-		}
 		s.StopEventHandler()
 	}
 	s.Stage = nil
@@ -88,6 +88,14 @@ func (s *Scene) RemoveActor(actor *Actor) {
 	}
 }
 
+// ClearActors removes all actors
+func (s *Scene) ClearActors() {
+	for _, a := range s.Actors {
+		a.Scene = nil
+	}
+	s.Actors = make([]*Actor, 0)
+}
+
 // Draw draws the supplied props into the specified Stage
 func (s *Scene) Draw() {
 	for _, a := range s.Actors {
@@ -106,5 +114,8 @@ func (s *Scene) FireKeyboardEvent(e *sdl.KeyboardEvent) {
 func (s *Scene) FireUpdateEvent(ticks uint32) {
 	if s.UpdateEventHandler != nil {
 		s.UpdateEventHandler(ticks)
+	}
+	for _, a := range s.Actors {
+		a.Update(ticks)
 	}
 }

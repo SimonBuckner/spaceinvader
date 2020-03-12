@@ -9,29 +9,19 @@ const testScreenName = "Test Scene"
 
 type testScreen struct {
 	*gfx.Scene
-	game    *game
-	p1      *player
-	titles  *text
-	p1Score *text
-	hiScore *text
-	p2Score *text
+	game  *game
+	p1    *player
+	score *score
 }
 
 func newTestScene(game *game) *testScreen {
 
 	s := &testScreen{
-		Scene:   gfx.NewScene(testScreenName),
-		game:    game,
-		p1:      newPlayer(game),
-		titles:  newText(game, "SCORE-1 HI-SCORE SCORE-2"),
-		p1Score: newText(game, "1234"),
-		hiScore: newText(game, "5678"),
-		p2Score: newText(game, "9012"),
+		Scene: gfx.NewScene(testScreenName),
+		game:  game,
+		p1:    newPlayer(game),
+		score: newScore(game),
 	}
-	s.titles.Pos.SetInt32(7*1, 0, 0)
-	s.p1Score.Pos.SetInt32(7*3, 12, 0)
-	s.hiScore.Pos.SetInt32(7*11, 12, 0)
-	s.p2Score.Pos.SetInt32(7*20, 12, 0)
 
 	s.StartEventHandler = s.onStart
 	s.StopEventHandler = s.onStop
@@ -42,18 +32,12 @@ func newTestScene(game *game) *testScreen {
 
 func (s *testScreen) onStart() {
 	s.AddActor(s.p1.Actor)
-	s.AddActor(s.titles.Actor)
-	s.AddActor(s.p1Score.Actor)
-	s.AddActor(s.hiScore.Actor)
-	s.AddActor(s.p2Score.Actor)
+	s.AddActor(s.score.Actor)
+
 }
 
 func (s *testScreen) onStop() {
-	s.RemoveActor(s.p1.Actor)
-	s.RemoveActor(s.titles.Actor)
-	s.RemoveActor(s.p1Score.Actor)
-	s.RemoveActor(s.hiScore.Actor)
-	s.RemoveActor(s.p2Score.Actor)
+	s.ClearActors()
 }
 
 func (s *testScreen) onKeyboard(e *sdl.KeyboardEvent) {
@@ -74,6 +58,7 @@ func (s *testScreen) onKeyboard(e *sdl.KeyboardEvent) {
 }
 
 func (s *testScreen) onUpdate(ticks uint32) {
+	// fmt.Printf("elapsed time %f\n", s.ElapsedTime())
 	kb := s.KBState()
 
 	if kb.IsKeyDown(sdl.SCANCODE_LEFT) != kb.IsKeyDown(sdl.SCANCODE_RIGHT) {
@@ -83,9 +68,4 @@ func (s *testScreen) onUpdate(ticks uint32) {
 			s.p1.moveRight()
 		}
 	}
-	s.p1.update(ticks)
-	s.titles.update(ticks)
-	s.p1Score.update(ticks)
-	s.hiScore.update(ticks)
-	s.p2Score.update(ticks)
 }

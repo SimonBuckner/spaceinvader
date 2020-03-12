@@ -14,8 +14,9 @@ type Actor struct {
 	Pos     Vec3
 	Speed   Vec3
 
-	StartEventHandler func()
-	StopEventHandler  func()
+	StartEventHandler  func()
+	StopEventHandler   func()
+	UpdateEventHandler func(uint32)
 }
 
 // NewActor factory
@@ -44,6 +45,13 @@ func (a *Actor) Stop() {
 		a.StopEventHandler()
 	}
 	a.Scene = nil
+}
+
+// Update the actor
+func (a *Actor) Update(ticks uint32) {
+	if a.UpdateEventHandler != nil {
+		a.UpdateEventHandler(ticks)
+	}
 }
 
 // Draw draws all props the actor is holding
