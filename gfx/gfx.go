@@ -1,6 +1,8 @@
 package gfx
 
 import (
+	"fmt"
+
 	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -129,26 +131,29 @@ func (p *Vec3) SetInt32(x, y, z int32) {
 	p.Z = float32(z)
 }
 
+// TransformXYZFunc transforms game X, Y, Z to diplay X, Y, Z
+type TransformXYZFunc func(pos Vec3) (tX, tY, tZ int32)
+
 // Prop represents an on-screen item.
 type Prop struct {
 	Name    string
 	Pos     Vec3
-	Speed   Vec3
 	Texture *sdl.Texture
 	Scale   float32
 
 	Width  int32
 	Height int32
+	TransformXYZFunc
 }
 
 // NewProp factory
-func NewProp(name string, texture *sdl.Texture) *Prop {
+func NewProp(name string, texture *sdl.Texture, transformFunc TransformXYZFunc) *Prop {
 	return &Prop{
-		Name:    name,
-		Texture: texture,
-		Pos:     Vec3{},
-		Speed:   Vec3{},
-		Scale:   1,
+		Name:             name,
+		Texture:          texture,
+		Pos:              Vec3{},
+		Scale:            1,
+		TransformXYZFunc: transformFunc,
 	}
 }
 
@@ -159,7 +164,13 @@ func (p *Prop) Draw(renderer *sdl.Renderer) {
 	}
 
 	_, _, w, h, _ := p.Texture.Query()
-	x, y, _ := p.Pos.Int32()
+	var x, y int32
+	if p.TransformXYZFunc != nil {
+		x, y, _ = p.TransformXYZFunc(p.Pos)
+	} else {
+		fmt.Println("no transform")
+		x, y, _ = p.Pos.Int32()
+	}
 
 	dstRect := &sdl.Rect{
 		X: x,

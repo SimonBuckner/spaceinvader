@@ -9,20 +9,21 @@ const testScreenName = "Test Scene"
 
 type testScreen struct {
 	*gfx.Scene
-	game  *game
-	p1    *player
-	score *score
+	game      *game
+	p1        *player
+	score     *score
+	alienRack *alienRack
 }
 
 func newTestScene(game *game) *testScreen {
 
 	s := &testScreen{
-		Scene: gfx.NewScene(testScreenName),
-		game:  game,
-		p1:    newPlayer(game),
-		score: newScore(game),
+		Scene:     gfx.NewScene(testScreenName),
+		game:      game,
+		p1:        newPlayer(game),
+		score:     newScore(game),
+		alienRack: newAlienRack(game),
 	}
-	// s.playerShot = newPlayerShot(game, s.p1)
 
 	s.StartEventHandler = s.onStart
 	s.StopEventHandler = s.onStop

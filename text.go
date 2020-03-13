@@ -7,6 +7,7 @@ import (
 
 type banner struct {
 	*gfx.Actor
+	game      *game
 	text      string
 	cacheText string
 	texMap    map[string]*sdl.Texture
@@ -16,6 +17,7 @@ type banner struct {
 func newBanner(game *game, cacheChars string, text string, maxLength int) *banner {
 	t := &banner{
 		Actor:     gfx.NewActor("text"),
+		game:      game,
 		cacheText: cacheChars,
 		text:      text,
 		texMap:    make(map[string]*sdl.Texture),
@@ -38,7 +40,7 @@ func (b *banner) Start(scene *gfx.Scene) {
 		b.texMap[l] = tex
 	}
 	for i := 0; i < len(b.props); i++ {
-		b.props[i] = gfx.NewProp("banner", nil)
+		b.props[i] = gfx.NewProp("banner", nil, b.game.transformXYZ)
 		b.props[i].Scale = b.Scale
 	}
 }
@@ -52,11 +54,11 @@ func (b *banner) Update(ticks uint32) {
 	x, y, _ := b.Pos.Int32()
 
 	for i, r := range b.text {
-		x1, y1 := convertXY(b.Scene, x, y)
+		// x1, y1 := convertXY(b.Scene, x, y)
 
 		tex := b.texMap[string(r)]
 		p := b.props[i]
-		p.Pos.SetInt32(x1, y1, 0)
+		p.Pos.SetInt32(x, y, 0)
 		p.Texture = b.texMap[string(r)]
 
 		_, _, w, _, _ := tex.Query()

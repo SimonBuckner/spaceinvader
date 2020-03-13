@@ -14,6 +14,7 @@ const (
 	playerExplodeTTL = 10
 	shotSpeed        = 540
 	shotExplodeTTL   = 40
+	shotMissedY      = 25
 
 	// Start positions for player props
 	playerX = 1
@@ -56,8 +57,8 @@ type player struct {
 func newPlayer(game *game) *player {
 	p := &player{
 		Actor:     gfx.NewActor("player"),
-		ship:      gfx.NewProp("player ship", nil),
-		shot:      gfx.NewProp("player shot", nil),
+		ship:      gfx.NewProp("player ship", nil, game.transformXYZ),
+		shot:      gfx.NewProp("player shot", nil, game.transformXYZ),
 		shotState: shotAvailable,
 	}
 	return p
@@ -97,8 +98,7 @@ func (p *player) updatePlayer(ticks uint32) {
 		return
 	}
 	x, y, _ := p.Pos.Int32()
-	x1, y1 := convertXY(p.Scene, x, y)
-	p.ship.Pos.SetInt32(x1, y1, 0)
+	p.ship.Pos.SetInt32(x, y, 0)
 	if !p.hit {
 		return
 	}
@@ -134,10 +134,9 @@ func (p *player) updateShot(ticks uint32) {
 		x, y, _ := p.Pos.Int32()
 		x = x + int32(w/2)
 		y = y - 2
-		x1, y1 := convertXY(p.Scene, x, y)
-		p.shot.Pos.SetInt32(x1, y1, 0)
+		p.shot.Pos.SetInt32(x, y, 0)
 	case shotInFlight:
-		if p.shot.Pos.Y > (30 * p.Scale) {
+		if p.shot.Pos.Y > shotMissedY {
 			p.shot.Pos.Y = p.shot.Pos.Y - float32(shotSpeed*p.Scene.ElapsedTime())
 		} else {
 			p.shotState = shotExplode

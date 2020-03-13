@@ -18,6 +18,10 @@ const (
 	height         = 768
 	alienRows      = 5
 	alienCols      = 11
+	alienRowHeight = 10
+	alienColWidth  = 10
+	alienStartX    = 10
+	alienStartY    = 200
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -87,8 +91,9 @@ func calcScale(w, h int32) float32 {
 	return float32(rW)
 }
 
-func convertXY(scene *gfx.Scene, x, y int32) (int32, int32) {
-	w, h := scene.Stage.WindowSize()
+func (g *game) transformXYZ(pos gfx.Vec3) (int32, int32, int32) {
+	scene := g.stage.Scene
+	w, h := g.stage.WindowSize()
 
 	ow := float32(originalWidth) * scene.Stage.Scale
 	oh := float32(originalHeight) * scene.Stage.Scale
@@ -96,8 +101,8 @@ func convertXY(scene *gfx.Scene, x, y int32) (int32, int32) {
 	offsetX := (float32(w) - ow) / 2
 	offsetY := (float32(h) - oh) / 2
 
-	newX := float32(x) * scene.Stage.Scale
-	newY := float32(y) * scene.Stage.Scale
+	newX := float32(pos.X) * scene.Stage.Scale
+	newY := float32(pos.Y) * scene.Stage.Scale
 
-	return int32(newX + offsetX), int32(newY + offsetY)
+	return int32(newX + offsetX), int32(newY + offsetY), 0
 }
