@@ -22,18 +22,19 @@ func newTestScene(game *game) *testScreen {
 		p1:    newPlayer(game),
 		score: newScore(game),
 	}
+	// s.playerShot = newPlayerShot(game, s.p1)
 
 	s.StartEventHandler = s.onStart
 	s.StopEventHandler = s.onStop
 	s.UpdateEventHandler = s.onUpdate
 	s.KeyboardEventHandler = s.onKeyboard
+
 	return s
 }
 
 func (s *testScreen) onStart() {
 	s.AddActor(s.p1)
 	s.AddActor(s.score)
-
 }
 
 func (s *testScreen) onStop() {
@@ -67,5 +68,8 @@ func (s *testScreen) onUpdate(ticks uint32) {
 		} else if kb.IsKeyDown(sdl.SCANCODE_RIGHT) {
 			s.p1.moveRight()
 		}
+	}
+	if kb.IsKeyDown(sdl.SCANCODE_SPACE) {
+		s.p1.fireShot()
 	}
 }

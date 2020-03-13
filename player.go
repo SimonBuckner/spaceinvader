@@ -1,14 +1,19 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 const (
-	playerHeight = 8
-	playerwidth  = 16
-	playerSpeed  = 60
+	playerHeight     = 8
+	playerwidth      = 16
+	playerSpeed      = 60
+	playerExplodeTTL = 10
+	shotSpeed        = 540
+	shotExplodeTTL   = 40
 
 	// Start positions for player props
 	playerX = 1
@@ -17,12 +22,26 @@ const (
 	startLives = 3
 )
 
+type shotState int
+
+const (
+	shotAvailable shotState = iota + 1
+	shotInFlight
+	shotExplode
+)
+
 type player struct {
 	*gfx.Actor
-	ship        *gfx.Prop
-	aliveTex    *sdl.Texture
-	explode1Tex *sdl.Texture
-	explode2Tex *sdl.Texture
+	ship         *gfx.Prop
+	shipAlive    *sdl.Texture
+	shipExplode1 *sdl.Texture
+	shipExplode2 *sdl.Texture
+
+	shot             *gfx.Prop
+	shotAvailable    *sdl.Texture
+	shotExploding    *sdl.Texture
+	shotState        shotState
+	shotExplodeCount int
 
 	score        int
 	extraAvail   bool
@@ -36,8 +55,10 @@ type player struct {
 
 func newPlayer(game *game) *player {
 	p := &player{
-		Actor: gfx.NewActor("player"),
-		ship:  gfx.NewProp("player ship", nil),
+		Actor:     gfx.NewActor("player"),
+		ship:      gfx.NewProp("player ship", nil),
+		shot:      gfx.NewProp("player shot", nil),
+		shotState: shotAvailable,
 	}
 	return p
 }
@@ -46,14 +67,17 @@ func (p *player) Start(scene *gfx.Scene) {
 	p.Scene = scene
 	p.Scale = scene.Scale()
 	p.ship.Scale = scene.Scale()
+	p.shot.Scale = scene.Scale()
 
 	stage := scene.Stage
 
-	p.aliveTex, _ = playerSprite.ToTexture(stage)
-	p.explode1Tex, _ = plrBlowupSprite0.ToTexture(stage)
-	p.explode2Tex, _ = plrBlowupSprite1.ToTexture(stage)
+	p.shipAlive, _ = playerSprite.ToTexture(stage)
+	p.shipExplode1, _ = plrBlowupSprite0.ToTexture(stage)
+	p.shipExplode2, _ = plrBlowupSprite1.ToTexture(stage)
+	p.shotAvailable, _ = playerShotSpr.ToTexture(stage)
+	p.shotExploding, _ = shotExploding.ToTexture(stage)
 
-	_, _, w, h, _ := p.aliveTex.Query()
+	_, _, w, h, _ := p.shipAlive.Query()
 
 	p.width = w
 	p.height = h
@@ -64,22 +88,26 @@ func (p *player) Start(scene *gfx.Scene) {
 
 // Update ..
 func (p *player) Update(ticks uint32) {
+	p.updatePlayer(ticks)
+	p.updateShot(ticks)
+}
+
+func (p *player) updatePlayer(ticks uint32) {
 	if !p.Visible {
 		return
 	}
 	x, y, _ := p.Pos.Int32()
 	x1, y1 := convertXY(p.Scene, x, y)
 	p.ship.Pos.SetInt32(x1, y1, 0)
-	// fmt.Printf("ship x1: %d y1: %d / x2: %d / y2: %d\n", x, y, x1, y1)
 	if !p.hit {
 		return
 	}
 
-	if p.explodeCount > 10 {
+	if p.explodeCount > playerExplodeTTL {
 		p.lives--
 		if p.lives > 0 {
 			p.hit = false
-			p.ship.Texture = p.aliveTex
+			p.ship.Texture = p.shipAlive
 			return
 		}
 		p.setDead()
@@ -92,15 +120,45 @@ func (p *player) Update(ticks uint32) {
 	}
 
 	if p.explodeCount%2 == 0 {
-		p.ship.Texture = p.explode1Tex
+		p.ship.Texture = p.shipExplode1
 	} else {
-		p.ship.Texture = p.explode2Tex
+		p.ship.Texture = p.shipExplode2
+	}
+}
+
+func (p *player) updateShot(ticks uint32) {
+
+	switch p.shotState {
+	case shotAvailable:
+		w, _ := p.width, p.height
+		x, y, _ := p.Pos.Int32()
+		x = x + int32(w/2)
+		y = y - 2
+		x1, y1 := convertXY(p.Scene, x, y)
+		p.shot.Pos.SetInt32(x1, y1, 0)
+	case shotInFlight:
+		if p.shot.Pos.Y > (30 * p.Scale) {
+			p.shot.Pos.Y = p.shot.Pos.Y - float32(shotSpeed*p.Scene.ElapsedTime())
+		} else {
+			p.shotState = shotExplode
+			p.shot.Texture = p.shotExploding
+		}
+	case shotExplode:
+		p.shotExplodeCount++
+		if p.shotExplodeCount > shotExplodeTTL {
+			p.shotState = shotAvailable
+			p.shot.Texture = p.shotAvailable
+			p.shotExplodeCount = 0
+		}
 	}
 }
 
 // Draw ..
 func (p *player) Draw() {
-	p.ship.Draw(p.Scene.Renderer())
+	if p.Visible {
+		p.ship.Draw(p.Scene.Renderer())
+		p.shot.Draw(p.Scene.Renderer())
+	}
 }
 
 func (p *player) reset() {
@@ -111,8 +169,11 @@ func (p *player) reset() {
 	p.hit = false
 	p.explodeCount = 0
 	p.ticks = 0
-	p.ship.Texture = p.aliveTex
+	p.ship.Texture = p.shipAlive
 	p.Visible = true
+
+	p.shot.Texture = p.shotAvailable
+	p.shotExplodeCount = 0
 }
 
 func (p *player) setHit() {
@@ -146,4 +207,11 @@ func (p *player) moveRight() {
 		return
 	}
 	p.Pos.X = float32(originalWidth - p.width)
+}
+
+func (p *player) fireShot() {
+	if p.shotState == shotAvailable {
+		fmt.Println("fireing")
+		p.shotState = shotInFlight
+	}
 }
