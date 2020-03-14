@@ -96,7 +96,9 @@ func (s *Scene) ClearActors() {
 // Draw draws the supplied props into the specified Stage
 func (s *Scene) Draw() {
 	for _, a := range s.Actors {
-		a.Draw()
+		if a != nil {
+			a.Draw()
+		}
 	}
 }
 

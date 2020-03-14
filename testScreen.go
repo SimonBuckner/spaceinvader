@@ -36,6 +36,7 @@ func newTestScene(game *game) *testScreen {
 func (s *testScreen) onStart() {
 	s.AddActor(s.p1)
 	s.AddActor(s.score)
+	s.AddActor(s.alienRack)
 }
 
 func (s *testScreen) onStop() {

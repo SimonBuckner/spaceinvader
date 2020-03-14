@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -210,7 +208,6 @@ func (p *player) moveRight() {
 
 func (p *player) fireShot() {
 	if p.shotState == shotAvailable {
-		fmt.Println("fireing")
 		p.shotState = shotInFlight
 	}
 }

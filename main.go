@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -18,10 +19,10 @@ const (
 	height         = 768
 	alienRows      = 5
 	alienCols      = 11
-	alienRowHeight = 10
-	alienColWidth  = 10
+	alienRowHeight = 16
+	alienColWidth  = 16
 	alienStartX    = 10
-	alienStartY    = 200
+	alienStartY    = originalHeight - 0x78
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -103,6 +104,26 @@ func (g *game) transformXYZ(pos gfx.Vec3) (int32, int32, int32) {
 
 	newX := float32(pos.X) * scene.Stage.Scale
 	newY := float32(pos.Y) * scene.Stage.Scale
+
+	return int32(newX + offsetX), int32(newY + offsetY), 0
+}
+
+func (g *game) transformXYZDebug(pos gfx.Vec3) (int32, int32, int32) {
+	scene := g.stage.Scene
+	w, h := g.stage.WindowSize()
+	x := pos.X
+	y := pos.Y
+
+	ow := float32(originalWidth) * scene.Stage.Scale
+	oh := float32(originalHeight) * scene.Stage.Scale
+
+	offsetX := (float32(w) - ow) / 2
+	offsetY := (float32(h) - oh) / 2
+
+	newX := x * scene.Stage.Scale
+	newY := y * scene.Stage.Scale
+
+	fmt.Printf("X1: %04d Y041: %d  -  X2: %04d Y2: %04d\n", int32(x), int32(y), int32(newX), int32(newY))
 
 	return int32(newX + offsetX), int32(newY + offsetY), 0
 }

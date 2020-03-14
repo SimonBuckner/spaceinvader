@@ -23,7 +23,6 @@ func newAlienRack(game *game) *alienRack {
 		alienB: make([]*sdl.Texture, 2),
 		alienC: make([]*sdl.Texture, 2),
 	}
-
 	return ar
 }
 
@@ -31,9 +30,9 @@ func (ar *alienRack) Start(scene *gfx.Scene) {
 	ar.Scene = scene
 	ar.Scale = scene.Scale()
 
-	for _, p := range ar.props {
-		p = gfx.NewProp("alient", nil, ar.game.transformXYZ)
-		p.Scale = scene.Scale()
+	for i := 0; i < len(ar.props); i++ {
+		ar.props[i] = gfx.NewProp("alien", nil, ar.game.transformXYZ)
+		ar.props[i].Scale = scene.Scale()
 	}
 	ar.alienA[0], _ = alienSprA0.ToTexture(scene.Stage)
 	ar.alienA[1], _ = alienSprA1.ToTexture(scene.Stage)
@@ -47,31 +46,48 @@ func (ar *alienRack) Start(scene *gfx.Scene) {
 
 func (ar *alienRack) Update(ticks uint32) {
 
+	i := 0
+	x, y, _ := ar.Pos.Int32()
+
+	for r := int32(0); r < alienRows; r++ {
+		for c := int32(0); c < alienCols; c++ {
+			ar.props[i].Pos.SetInt32(x, y, 0)
+			x = x + alienColWidth
+			i++
+		}
+		x = alienStartX
+		y = y - alienRowHeight
+	}
 }
 
 func (ar *alienRack) Draw() {
 	for _, p := range ar.props {
-		if p.Texture != nil {
+		if p != nil {
 			p.Draw(ar.Scene.Renderer())
 		}
 	}
 }
 
 func (ar *alienRack) reset() {
-	// i := 0
+	i := 0
+	ar.Pos.SetInt32(alienStartX, alienStartY, 0)
+	x, y, _ := ar.Pos.Int32()
 
-	// var x, y int32
-	// for r := int32(0); r < alienRows; r++ {
-	// 	x = alienStartX
-	// 	y = alienStartY - (r - alienRowHeight)
-	// 	for c := int32(0); c <= alienCols; c++ {
-	// 		x = x + (x * alienColWidth)
-	// 		switch r {
-	// 		case 0, 1:
-
-	// 		case 2, 3:
-	// 		case 4:
-	// 		}
-	// 	}
-	// }
+	for r := int32(0); r < alienRows; r++ {
+		for c := int32(0); c < alienCols; c++ {
+			switch r {
+			case 0, 1:
+				ar.props[i].Texture = ar.alienA[0]
+			case 2, 3:
+				ar.props[i].Texture = ar.alienB[0]
+			case 4:
+				ar.props[i].Texture = ar.alienC[0]
+			}
+			ar.props[i].Pos.SetInt32(x, y, 0)
+			x = x + alienColWidth
+			i++
+		}
+		x = alienStartX
+		y = y - alienRowHeight
+	}
 }
