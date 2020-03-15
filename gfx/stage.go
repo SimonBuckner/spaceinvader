@@ -20,8 +20,6 @@ type Stage struct {
 	Height int32
 	Scale  float32
 
-	// FramesCount int32
-	// FrameStart  time.Time
 	ElapsedTime float32
 
 	FPSStart time.Time
@@ -46,6 +44,8 @@ func NewStage(title string, top, left, width, height int, scale float32) (*Stage
 		KBState:  NewKBState(),
 		Stopping: false,
 	}
+
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
 
 	{
 		window, err := sdl.CreateWindow(title, stage.Left, stage.Top, stage.Width, stage.Height, sdl.WINDOW_SHOWN)

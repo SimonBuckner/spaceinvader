@@ -50,18 +50,17 @@ func (s *testScreen) onKeyboard(e *sdl.KeyboardEvent) {
 			if s.p1.Visible {
 				s.p1.Visible = false
 			} else {
-				s.p1.reset()
+				s.p1.resetShip()
 			}
 		case sdl.SCANCODE_H:
-			if s.p1.Visible && !s.p1.hit {
-				s.p1.setHit()
+			if s.p1.Visible && s.p1.shipState == shipAlive {
+				s.p1.setShipHit()
 			}
 		}
 	}
 }
 
 func (s *testScreen) onUpdate(ticks uint32) {
-	// fmt.Printf("elapsed time %f\n", s.ElapsedTime())
 	kb := s.KBState()
 
 	if kb.IsKeyDown(sdl.SCANCODE_LEFT) != kb.IsKeyDown(sdl.SCANCODE_RIGHT) {
@@ -73,5 +72,10 @@ func (s *testScreen) onUpdate(ticks uint32) {
 	}
 	if kb.IsKeyDown(sdl.SCANCODE_SPACE) {
 		s.p1.fireShot()
+	}
+	if s.p1.shotState == shotInFlight {
+		if s.alienRack.checkForHit(s.p1) {
+			s.p1.shotState = shotHit
+		}
 	}
 }
