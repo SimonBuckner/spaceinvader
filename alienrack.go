@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -130,7 +128,6 @@ func (ar *alienRack) checkForHit(player *player) bool {
 		_, _, aw, ah, _ := a.Texture.Query()
 		aRect := sdl.Rect{X: ax, Y: ay, W: aw, H: ah}
 		if sRect.HasIntersection(&aRect) {
-			fmt.Println("HIT")
 			return true
 		}
 	}

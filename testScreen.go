@@ -70,7 +70,7 @@ func (s *testScreen) onUpdate(ticks uint32) {
 			s.p1.moveRight()
 		}
 	}
-	if kb.IsKeyDown(sdl.SCANCODE_SPACE) {
+	if kb.OnKeyDown(sdl.SCANCODE_SPACE) {
 		s.p1.fireShot()
 	}
 	if s.p1.shotState == shotInFlight {

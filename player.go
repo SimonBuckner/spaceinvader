@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/SimonBuckner/spaceinvader/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -189,7 +187,6 @@ func (p *player) resetShip() {
 }
 
 func (p *player) resetShot() {
-	fmt.Println("resetShot")
 	p.shot.Texture = p.shotAvailable
 	p.shotState = shotAvailable
 

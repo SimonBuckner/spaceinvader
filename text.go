@@ -46,7 +46,6 @@ func (b *banner) Start(scene *gfx.Scene) {
 }
 
 func (b *banner) Update(ticks uint32) {
-	// fmt.Println("newText:onUpdate")
 	if !b.Visible {
 		return
 	}
@@ -54,8 +53,6 @@ func (b *banner) Update(ticks uint32) {
 	x, y, _ := b.Pos.Int32()
 
 	for i, r := range b.text {
-		// x1, y1 := convertXY(b.Scene, x, y)
-
 		tex := b.texMap[string(r)]
 		p := b.props[i]
 		p.Pos.SetInt32(x, y, 0)

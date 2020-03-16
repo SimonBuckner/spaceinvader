@@ -1,8 +1,6 @@
 package gfx
 
 import (
-	"fmt"
-
 	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -165,13 +163,12 @@ func (p *Prop) Draw(renderer *sdl.Renderer) {
 
 	_, _, w, h, _ := p.Texture.Query()
 	var x, y int32
+
 	if p.TransformXYZFunc != nil {
 		x, y, _ = p.TransformXYZFunc(p.Pos)
 	} else {
-		fmt.Println("no transform")
 		x, y, _ = p.Pos.Int32()
 	}
-
 	dstRect := &sdl.Rect{
 		X: x,
 		Y: y,
