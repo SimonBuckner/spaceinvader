@@ -1,6 +1,8 @@
 package gfx
 
 import (
+	"time"
+
 	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -13,13 +15,23 @@ const (
 	aMask = 0x000000FF
 )
 
-// Drawable represents nd object that can be drawn by a renderer
-type Drawable interface {
-	Texture() *sdl.Texture
-	Vec3() (x, y, z int32)
-	Scale() float32
-	IsVisible() bool
+// Color meets the color.Color interface required for CreateRGBSurface
+type Color struct {
+	R, G, B, A uint32
 }
+
+// RGBA meets the color.Color interface required for CreateRGBSurface
+func (c Color) RGBA() (r, g, b, a uint32) {
+	return c.R, c.G, c.B, c.A
+}
+
+// Drawable represents an object that can be drawn by a renderer
+// type Drawable interface {
+// 	Texture() *sdl.Texture
+// Vec3() (x, y, z int32)
+// Scale() float32
+// IsVisible() bool
+// }
 
 func init() {
 	sdl.LogSetAllPriority(sdl.LOG_PRIORITY_WARN)
@@ -129,55 +141,6 @@ func (p *Vec3) SetInt32(x, y, z int32) {
 	p.Z = float32(z)
 }
 
-// TransformXYZFunc transforms game X, Y, Z to diplay X, Y, Z
-type TransformXYZFunc func(pos Vec3) (tX, tY, tZ int32)
-
-// Prop represents an on-screen item.
-type Prop struct {
-	Name    string
-	Pos     Vec3
-	Texture *sdl.Texture
-	Scale   float32
-
-	Width  int32
-	Height int32
-	TransformXYZFunc
-}
-
-// NewProp factory
-func NewProp(name string, texture *sdl.Texture, transformFunc TransformXYZFunc) *Prop {
-	return &Prop{
-		Name:             name,
-		Texture:          texture,
-		Pos:              Vec3{},
-		Scale:            1,
-		TransformXYZFunc: transformFunc,
-	}
-}
-
-// Draw renders the props texture to the screen
-func (p *Prop) Draw(renderer *sdl.Renderer) {
-	if p.Texture == nil {
-		return
-	}
-
-	_, _, w, h, _ := p.Texture.Query()
-	var x, y int32
-
-	if p.TransformXYZFunc != nil {
-		x, y, _ = p.TransformXYZFunc(p.Pos)
-	} else {
-		x, y, _ = p.Pos.Int32()
-	}
-	dstRect := &sdl.Rect{
-		X: x,
-		Y: y,
-		W: int32(float32(w) * p.Scale),
-		H: int32(float32(h) * p.Scale),
-	}
-	renderer.Copy(p.Texture, nil, dstRect)
-}
-
 const (
 	keyUp   uint8 = 0
 	keyDown uint8 = 1
@@ -225,4 +188,31 @@ func (kb *KBState) IsKeyDown(key uint8) bool {
 // IsKeyUp returns true if the key state is up
 func (kb *KBState) IsKeyUp(key uint8) bool {
 	return kb.state[key] == keyUp
+}
+
+// FrameTimer tracks frame time metrics
+type FrameTimer struct {
+	start      time.Time
+	frameStart time.Time
+	count      int
+}
+
+// NewFrameTimer returns a new timer
+func NewFrameTimer() *FrameTimer {
+	return &FrameTimer{
+		start:      time.Now(),
+		frameStart: time.Now(),
+		count:      0,
+	}
+}
+
+// FrameStart starts a new frame
+func (ft *FrameTimer) FrameStart() {
+	time.Now()
+	ft.frameStart = time.Now()
+}
+
+// FrameEnd records the end of the fram and returns the elapsed time in milliseconds
+func (ft *FrameTimer) FrameEnd() uint32 {
+	elapsed := time.Now()
 }

@@ -1,0 +1,12 @@
+package gfx
+
+import (
+	"testing"
+)
+
+func TestNewEntity(t *testing.T) {
+	// r := &sdl.Renderer{}
+
+	// e := NewEntity(r, 1.0, BoxCollisionMode)
+
+}

@@ -3,7 +3,8 @@ module github.com/SimonBuckner/spaceinvader
 go 1.13
 
 require (
-	github.com/SimonBuckner/spaceinvader/gfx v0.0.0
+	github.com/SimonBuckner/screen2d v0.0.0
+	github.com/SimonBuckner/spaceinvader/gfx v0.0.0-20200315134132-d8ab462f7a03
 	github.com/cosiner/argv v0.0.1 // indirect
 	github.com/go-delve/delve v1.4.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
@@ -22,4 +23,4 @@ require (
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
 
-replace github.com/SimonBuckner/spaceinvader/gfx => ./gfx
+replace github.com/SimonBuckner/screen2d => ../screen2d

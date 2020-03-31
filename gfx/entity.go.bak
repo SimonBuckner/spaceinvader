@@ -1,0 +1,244 @@
+package gfx
+
+import (
+	"fmt"
+
+	"github.com/veandco/go-sdl2/sdl"
+)
+
+// CollisionMode d
+type CollisionMode int
+
+const (
+	// BoxCollisionMode detects collision by the bounding rectangle of the Entity
+	BoxCollisionMode CollisionMode = iota
+	// SubBoxCollisionMode detects collision by a series of smaller rectangles within the bounding rectangle of the Entity
+	SubBoxCollisionMode
+	// PixelCollisionMode detects collisions at the pixel level
+	PixelCollisionMode
+)
+
+// Entity represents an on-screen item entity like a ship or a missile or a letter
+type Entity struct {
+	Renderer      *sdl.Renderer
+	Pos           Vec3
+	Vector        Vec3
+	Scale         float32
+	CollisionMode CollisionMode
+
+	States  []*EntityState
+	Current *EntityState
+
+	TransformXYZFunc
+}
+
+// NewEntity factory for Entity
+func NewEntity(renderer *sdl.Renderer, scale float32, cm CollisionMode, transform TransformXYZFunc) *Entity {
+	return &Entity{
+		Renderer:         renderer,
+		Pos:              Vec3{},
+		Vector:           Vec3{},
+		Scale:            scale,
+		States:           make([]*EntityState, 0),
+		CollisionMode:    cm,
+		TransformXYZFunc: transform,
+	}
+}
+
+// Update takes any change to mode and position and updtaes the frame to display
+func (e *Entity) Update(ticks uint32) {
+	if e.Current == nil {
+		return
+	}
+}
+
+// Draw draws the current frame
+func (e *Entity) Draw() {
+	if e.Current == nil {
+		return
+	}
+
+	tex := e.Current.Texture()
+	if tex == nil {
+		return
+	}
+
+	_, _, w, h, _ := tex.Query()
+	var x, y int32
+
+	if e.TransformXYZFunc != nil {
+		x, y, _ = e.TransformXYZFunc(e.Pos)
+	} else {
+		x, y, _ = e.Pos.Int32()
+	}
+	dstRect := &sdl.Rect{
+		X: x,
+		Y: y,
+		W: int32(float32(w) * e.Scale),
+		H: int32(float32(h) * e.Scale),
+	}
+	e.Renderer.Copy(tex, nil, dstRect)
+}
+
+// GetPixels returns the pixels from the current frame
+func (e *Entity) GetPixels() []byte {
+	if e.Current != nil {
+		return e.Current.Surfaces[e.Current.FrameIndex].Pixels()
+	}
+	return nil
+}
+
+// Query returns information about the current frame
+func (e *Entity) Query() (x, y, w, h, pitch int32) {
+	if e.Current != nil {
+		_, _, w, h, _ := e.Current.Textures[e.Current.FrameIndex].Query()
+		return int32(e.Pos.X), int32(e.Pos.Y), w, h, (w * 4)
+	}
+	return 0, 0, 0, 0, 0
+}
+
+// SetScale sets the scale
+func (e *Entity) SetScale(scale float32) {
+	e.Scale = scale
+}
+
+// EntityState represents an animated entity in a specific mode, e.g. alive, blowing up or destroyed
+type EntityState struct {
+	Entity     *Entity
+	Surfaces   []*sdl.Surface
+	Textures   []*sdl.Texture
+	Width      int
+	Height     int
+	Pitch      int
+	FrameIndex int
+	FrameRate  uint32
+	Timer      uint32
+}
+
+// NewEntityState factory for EntityState
+func NewEntityState(entity *Entity, frames int, frameRate uint32) *EntityState {
+	return &EntityState{
+		Entity:     entity,
+		Surfaces:   make([]*sdl.Surface, frames),
+		Textures:   make([]*sdl.Texture, frames),
+		FrameIndex: 0,
+		FrameRate:  frameRate,
+		Timer:      0,
+	}
+}
+
+// LoadPixels sets the surface and texture of a specific frame with the supplied pixels
+func (es *EntityState) LoadPixels(pixels []int, w, h, frameIndex int) error {
+	if len(pixels) != w*h {
+		return fmt.Errorf("bitmap does not have the correct number of pixels")
+	}
+
+	surf, err := sdl.CreateRGBSurface(uint32(w), int32(h), 32, int32(w*4), 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF)
+	if err != nil {
+		return err
+	}
+
+	i := 0
+	c := Color{}
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			c.R = uint32((pixels[i] & 0xFF000000) >> 24)
+			c.G = uint32((pixels[i] & 0x00FF0000) >> 16)
+			c.B = uint32((pixels[i] & 0x0000FF00) >> 8)
+			c.A = uint32(pixels[i] & 0x000000FF)
+			surf.Set(x, y, c)
+		}
+	}
+
+	tex, err := es.Entity.Renderer.CreateTextureFromSurface(surf)
+	if err != nil {
+		return err
+	}
+	es.Surfaces[frameIndex] = surf
+	es.Textures[frameIndex] = tex
+
+	return nil
+}
+
+// Texture returns the current texture or nil
+func (es *EntityState) Texture() *sdl.Texture {
+	return es.Textures[es.FrameIndex]
+}
+
+// Surface returns the current texture or nil
+func (es *EntityState) Surface() *sdl.Surface {
+	return es.Surfaces[es.FrameIndex]
+}
+
+// CheckBoxHit checks if any part of the two EntitState boxes overlap
+func CheckBoxHit(entity1, entity2 *Entity) bool {
+
+	r1 := entity1.getRect()
+	r2 := entity2.getRect()
+
+	// Too far left or right
+	if r1.x1 > r2.x2 || r1.x2 < r2.x2 {
+		return false
+	}
+
+	// Top high or low
+	if r1.y1 > r2.y2 || r1.y2 < r2.y1 {
+		return false
+	}
+
+	return true
+}
+
+// CheckPixelHit checks if any pixels in the two EntityStates overlap
+func CheckPixelHit(entity1, entity2 *Entity, miss *sdl.Color) bool {
+	if entity1.Current == nil || entity2.Current == nil {
+		return false
+	}
+
+	x1, y1, _, _, p1 := entity1.Query()
+	pixels1 := entity1.GetPixels()
+	r2 := entity2.getRect()
+	_, _, _, _, p2 := entity1.Query()
+	pixels2 := entity2.GetPixels()
+
+	i := int32(0)
+	for i < int32(len(pixels1)) {
+		px := x1 + (i % p1)
+		py := y1 + (i / p1)
+		if px >= r2.x1 && px < r2.x2 && py >= r2.y1 && py < r2.y2 {
+			x := px - r2.x1
+			y := py - r2.y1
+			i2 := (y * p2) + (x * 4)
+			if pixels1[i] != miss.R && pixels2[i2] != miss.R {
+				return true
+			}
+			i++
+			if pixels1[i] != miss.G && pixels2[i2] != miss.G {
+				return true
+			}
+			i++
+			if pixels1[i] != miss.B && pixels2[i2] != miss.B {
+				return true
+			}
+			i++
+			// No point checking alpha
+			i++
+		}
+	}
+
+	return false
+}
+
+type rect struct {
+	x1, y1, x2, y2 int32
+}
+
+func (e *Entity) getRect() rect {
+	x, y, _, h, p := e.Query()
+	return rect{
+		x1: x,
+		y1: y,
+		x2: x + p,
+		y2: y + h,
+	}
+}

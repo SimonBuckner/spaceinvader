@@ -1,0 +1,10 @@
+package gfx
+
+import "github.com/veandco/go-sdl2/sdl"
+
+// Screen represents a viewable area
+type Screen struct {
+	w  *sdl.Window
+	r  *sdl.Renderer
+	kb *KBState
+}

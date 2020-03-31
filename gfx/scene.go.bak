@@ -7,6 +7,7 @@ import (
 // Actors are objects that can be drawn
 type Actors interface {
 	SetScale(float32)
+
 	Start(*Scene)
 	Update(ticks uint32)
 	Draw()

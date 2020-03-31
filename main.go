@@ -3,12 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"os"
 	"runtime"
-	"runtime/pprof"
 
-	"github.com/SimonBuckner/spaceinvader/gfx"
+	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -25,60 +22,128 @@ const (
 	alienStartY    = originalHeight - 0x78
 )
 
+const (
+	keyAlienSprCYA screen2d.SpriteMapKey = iota
+	keyAlienSprCYB
+	keyAlienSprA0
+	keyAlienSprA1
+	keyAlienSprB0
+	keyAlienSprB1
+	keyAlienSprC0
+	keyAlienSprC1
+	keyPlayerSprite
+	keyPlrBlowupSprite0
+	keyPlrBlowupSprite1
+	keyPlayerShotSpr
+	keyShotExploding
+	keyAlienExplode
+	keySquiglyShot0
+	keySquiglyShot2
+	keySquiglyShot3
+	keyPlungerShot0
+	keyPlungerShot1
+	keyPlungerShot2
+	keyPlungerShot3
+	keyRollShot0
+	keyRollShot1
+	keyRollShot2
+	keyRollShot3
+	keyShieldImage
+	keySpriteSaucer
+	keySpriteSaucerExp
+	keyAlienSprCA
+	keyAlienSprCB
+)
+
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 type game struct {
-	stage           *gfx.Stage
+	screen          *screen2d.Screen
+	scale           float32
 	backgroundColor sdl.Color
-	testScreen      *testScreen
+	sprites         *screen2d.SpriteMap
 }
 
 func main() {
 	runtime.LockOSThread()
 
-	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-	}
-
-	game := &game{
+	g := &game{
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
 	}
-	game.testScreen = newTestScene(game)
 
-	scale := calcScale(width, height)
-	stage, err := gfx.NewStage("Space Invaders", 26, 400, width, height, scale)
+	g.scale = calcScale(width, height)
+
+	{
+		screen, err := screen2d.NewScreen(width, height, "Space Invaders")
+		if err != nil {
+			panic(err)
+		}
+		screen.SetKeyDownFunc(g.onKeyDown)
+		g.screen = screen
+	}
+	defer g.screen.Destroy()
+
+	g.loadSpriteMap()
+	g.screen.Run()
+}
+
+func (g *game) loadSpriteMap() {
+	g.sprites = screen2d.NewSpriteMap()
+
+	g.loadSprite(keyAlienSprCYA, alienSprCYA)
+	g.loadSprite(keyAlienSprCYB, alienSprCYB)
+	g.loadSprite(keyAlienSprA0, alienSprA0)
+	g.loadSprite(keyAlienSprA1, alienSprA1)
+	g.loadSprite(keyAlienSprB0, alienSprB0)
+	g.loadSprite(keyAlienSprB1, alienSprB1)
+	g.loadSprite(keyAlienSprC0, alienSprC0)
+	g.loadSprite(keyAlienSprC1, alienSprC1)
+	g.loadSprite(keyPlayerSprite, playerSprite)
+	g.loadSprite(keyPlrBlowupSprite0, plrBlowupSprite0)
+	g.loadSprite(keyPlrBlowupSprite1, plrBlowupSprite1)
+	g.loadSprite(keyPlayerShotSpr, playerShotSpr)
+	g.loadSprite(keyShotExploding, shotExploding)
+	g.loadSprite(keyAlienExplode, alienExplode)
+	g.loadSprite(keySquiglyShot0, squiglyShot0)
+	g.loadSprite(keySquiglyShot2, squiglyShot2)
+	g.loadSprite(keySquiglyShot3, squiglyShot3)
+	g.loadSprite(keyPlungerShot0, plungerShot0)
+	g.loadSprite(keyPlungerShot1, plungerShot1)
+	g.loadSprite(keyPlungerShot2, plungerShot2)
+	g.loadSprite(keyPlungerShot3, plungerShot3)
+	g.loadSprite(keyRollShot0, rollShot0)
+	g.loadSprite(keyRollShot1, rollShot1)
+	g.loadSprite(keyRollShot2, rollShot2)
+	g.loadSprite(keyRollShot3, rollShot3)
+	g.loadSprite(keyShieldImage, shieldImage)
+	g.loadSprite(keySpriteSaucer, spriteSaucer)
+	g.loadSprite(keySpriteSaucerExp, spriteSaucerExp)
+	g.loadSprite(keyAlienSprCA, alienSprCA)
+	g.loadSprite(keyAlienSprCB, alienSprCB)
+}
+
+func (g *game) loadSprite(key screen2d.SpriteMapKey, bm *Bitmap) {
+	s := screen2d.NewSprite(g.screen.Rend())
+	err := s.LoadRGBAPixels(bm.Pixels, bm.Pitch)
 	if err != nil {
 		panic(err)
 	}
-	defer stage.Destroy()
-	game.stage = stage
-
-	stage.KeyboardEventHandler = game.onKeyboard
-
-	stage.Start()
+	g.sprites.AddSprite(key, s)
 }
 
-func (g *game) onKeyboard(e *sdl.KeyboardEvent) {
-	if e.Type == sdl.KEYUP {
-		switch e.Keysym.Scancode {
-		case sdl.SCANCODE_Q:
-			g.stage.Stop()
-			return
-		case sdl.SCANCODE_D:
-			g.stage.DumpActors()
-		case sdl.SCANCODE_F1:
-			if g.stage.Scene == g.testScreen.Scene {
-				g.stage.StopScene()
-			} else {
-				g.stage.StartScene(g.testScreen.Scene)
-			}
-		}
+func (g *game) onKeyDown(e *sdl.KeyboardEvent) {
+	switch e.Keysym.Scancode {
+	case sdl.SCANCODE_Q:
+		g.screen.Close()
+		return
+	case sdl.SCANCODE_D:
+		// g.stage.DumpActors()
+	case sdl.SCANCODE_F1:
+		// if g.stage.Scene == g.testScreen.Scene {
+		// 	g.stage.StopScene()
+		// } else {
+		// 	g.stage.StartScene(g.testScreen.Scene)
+		// }
 	}
 }
 
@@ -92,38 +157,24 @@ func calcScale(w, h int32) float32 {
 	return float32(rW)
 }
 
-func (g *game) transformXYZ(pos gfx.Vec3) (int32, int32, int32) {
-	scene := g.stage.Scene
-	w, h := g.stage.WindowSize()
+func (g *game) transformXYZ(e *screen2d.Entity) (int32, int32, int32) {
 
-	ow := float32(originalWidth) * scene.Stage.Scale
-	oh := float32(originalHeight) * scene.Stage.Scale
+	ow := float32(originalWidth) * g.scale
+	oh := float32(originalHeight) * g.scale
 
-	offsetX := (float32(w) - ow) / 2
-	offsetY := (float32(h) - oh) / 2
+	offsetX := (float32(width) - ow) / 2
+	offsetY := (float32(height) - oh) / 2
 
-	newX := float32(pos.X) * scene.Stage.Scale
-	newY := float32(pos.Y) * scene.Stage.Scale
+	newX := float32(e.X) * g.scale
+	newY := float32(e.Y) * g.scale
 
 	return int32(newX + offsetX), int32(newY + offsetY), 0
 }
 
-func (g *game) transformXYZDebug(pos gfx.Vec3) (int32, int32, int32) {
-	scene := g.stage.Scene
-	w, h := g.stage.WindowSize()
-	x := pos.X
-	y := pos.Y
+func (g *game) transformXYZDebug(e *screen2d.Entity) (int32, int32, int32) {
+	x, y, _ := g.transformXYZ(e)
 
-	ow := float32(originalWidth) * scene.Stage.Scale
-	oh := float32(originalHeight) * scene.Stage.Scale
+	fmt.Printf("X1: %04d Y041: %d  -  X2: %04d Y2: %04d\n", int32(e.X), int32(e.Y), int32(x), int32(y))
 
-	offsetX := (float32(w) - ow) / 2
-	offsetY := (float32(h) - oh) / 2
-
-	newX := x * scene.Stage.Scale
-	newY := y * scene.Stage.Scale
-
-	fmt.Printf("X1: %04d Y041: %d  -  X2: %04d Y2: %04d\n", int32(x), int32(y), int32(newX), int32(newY))
-
-	return int32(newX + offsetX), int32(newY + offsetY), 0
+	return x, y, 0
 }
