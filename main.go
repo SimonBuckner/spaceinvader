@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"runtime"
 
@@ -12,8 +11,8 @@ import (
 const (
 	originalWidth  = 224
 	originalHeight = 256
-	width          = 1024
-	height         = 768
+	winWidth       = 1024
+	winHeight      = 768
 	alienRows      = 5
 	alienCols      = 11
 	alienRowHeight = 16
@@ -55,13 +54,12 @@ const (
 	keyAlienSprCB
 )
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-
 type game struct {
 	screen          *screen2d.Screen
 	scale           float32
 	backgroundColor sdl.Color
 	sprites         *screen2d.SpriteMap
+	test            *testScreen
 }
 
 func main() {
@@ -71,55 +69,75 @@ func main() {
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
 	}
 
-	g.scale = calcScale(width, height)
+	g.scale = calcScale(winWidth, winHeight)
 
 	{
-		screen, err := screen2d.NewScreen(width, height, "Space Invaders")
+		screen, err := screen2d.NewScreen(winWidth, winHeight, "Space Invaders")
 		if err != nil {
 			panic(err)
 		}
-		screen.SetKeyDownFunc(g.onKeyDown)
 		g.screen = screen
 	}
 	defer g.screen.Destroy()
 
 	g.loadSpriteMap()
+	g.test = newTestScene(g)
+	g.activate()
 	g.screen.Run()
+}
+
+func (g *game) activate() {
+	g.screen.ClearFuncs()
+	g.screen.SetKeyDownFunc(g.onKeyDown)
 }
 
 func (g *game) loadSpriteMap() {
 	g.sprites = screen2d.NewSpriteMap()
 
-	g.loadSprite(keyAlienSprCYA, alienSprCYA)
-	g.loadSprite(keyAlienSprCYB, alienSprCYB)
+	g.loadSprite(keyAlienExplode, alienExplode)
+
 	g.loadSprite(keyAlienSprA0, alienSprA0)
 	g.loadSprite(keyAlienSprA1, alienSprA1)
+
 	g.loadSprite(keyAlienSprB0, alienSprB0)
 	g.loadSprite(keyAlienSprB1, alienSprB1)
+
 	g.loadSprite(keyAlienSprC0, alienSprC0)
 	g.loadSprite(keyAlienSprC1, alienSprC1)
+
+	g.loadSprite(keyAlienSprCA, alienSprCA)
+	g.loadSprite(keyAlienSprCB, alienSprCB)
+
+	g.loadSprite(keyAlienSprCYA, alienSprCYA)
+	g.loadSprite(keyAlienSprCYB, alienSprCYB)
+
+	g.loadSprite(keyPlayerShotSpr, playerShotSpr)
 	g.loadSprite(keyPlayerSprite, playerSprite)
+
 	g.loadSprite(keyPlrBlowupSprite0, plrBlowupSprite0)
 	g.loadSprite(keyPlrBlowupSprite1, plrBlowupSprite1)
-	g.loadSprite(keyPlayerShotSpr, playerShotSpr)
-	g.loadSprite(keyShotExploding, shotExploding)
-	g.loadSprite(keyAlienExplode, alienExplode)
-	g.loadSprite(keySquiglyShot0, squiglyShot0)
-	g.loadSprite(keySquiglyShot2, squiglyShot2)
-	g.loadSprite(keySquiglyShot3, squiglyShot3)
+
 	g.loadSprite(keyPlungerShot0, plungerShot0)
 	g.loadSprite(keyPlungerShot1, plungerShot1)
 	g.loadSprite(keyPlungerShot2, plungerShot2)
 	g.loadSprite(keyPlungerShot3, plungerShot3)
+
 	g.loadSprite(keyRollShot0, rollShot0)
 	g.loadSprite(keyRollShot1, rollShot1)
 	g.loadSprite(keyRollShot2, rollShot2)
 	g.loadSprite(keyRollShot3, rollShot3)
+
 	g.loadSprite(keyShieldImage, shieldImage)
+
+	g.loadSprite(keyShotExploding, shotExploding)
+
 	g.loadSprite(keySpriteSaucer, spriteSaucer)
 	g.loadSprite(keySpriteSaucerExp, spriteSaucerExp)
-	g.loadSprite(keyAlienSprCA, alienSprCA)
-	g.loadSprite(keyAlienSprCB, alienSprCB)
+
+	g.loadSprite(keySquiglyShot0, squiglyShot0)
+	g.loadSprite(keySquiglyShot2, squiglyShot2)
+	g.loadSprite(keySquiglyShot3, squiglyShot3)
+
 }
 
 func (g *game) loadSprite(key screen2d.SpriteMapKey, bm *Bitmap) {
@@ -133,17 +151,13 @@ func (g *game) loadSprite(key screen2d.SpriteMapKey, bm *Bitmap) {
 
 func (g *game) onKeyDown(e *sdl.KeyboardEvent) {
 	switch e.Keysym.Scancode {
-	case sdl.SCANCODE_Q:
+	case sdl.SCANCODE_Q, sdl.SCANCODE_ESCAPE:
 		g.screen.Close()
 		return
 	case sdl.SCANCODE_D:
 		// g.stage.DumpActors()
 	case sdl.SCANCODE_F1:
-		// if g.stage.Scene == g.testScreen.Scene {
-		// 	g.stage.StopScene()
-		// } else {
-		// 	g.stage.StartScene(g.testScreen.Scene)
-		// }
+		g.test.activate()
 	}
 }
 
@@ -157,24 +171,27 @@ func calcScale(w, h int32) float32 {
 	return float32(rW)
 }
 
-func (g *game) transformXYZ(e *screen2d.Entity) (int32, int32, int32) {
+func translatePos(x, y int32, scale float32) (tX, tY int32) {
 
-	ow := float32(originalWidth) * g.scale
-	oh := float32(originalHeight) * g.scale
+	scaledW := float32(originalWidth) * scale
+	scaledH := float32(originalHeight) * scale
 
-	offsetX := (float32(width) - ow) / 2
-	offsetY := (float32(height) - oh) / 2
+	offsetX := (float32(winWidth) - scaledW) / 2
+	offsetY := (float32(winHeight) - scaledH) / 2
 
-	newX := float32(e.X) * g.scale
-	newY := float32(e.Y) * g.scale
+	scaledX := float32(x) * scale
+	scaledY := float32(y) * scale
 
-	return int32(newX + offsetX), int32(newY + offsetY), 0
+	tX = int32(scaledX + offsetX)
+	tY = int32(scaledY + offsetY)
+
+	return
 }
 
-func (g *game) transformXYZDebug(e *screen2d.Entity) (int32, int32, int32) {
-	x, y, _ := g.transformXYZ(e)
+func translatePosDebug(x, y int32, scale float32) (int32, int32) {
+	tX, tY := translatePos(x, y, scale)
 
-	fmt.Printf("X1: %04d Y041: %d  -  X2: %04d Y2: %04d\n", int32(e.X), int32(e.Y), int32(x), int32(y))
+	fmt.Printf("X1: %04d Y1: %04d  -  X2: %04d Y2: %04d\n", x, y, tX, tY)
 
-	return x, y, 0
+	return tX, tY
 }

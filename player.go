@@ -1,22 +1,77 @@
 package main
 
-// const (
-// 	playerHeight = 8
-// 	playerwidth  = 16
+import "github.com/SimonBuckner/screen2d"
 
-// 	shipSpeed      = 60
-// 	shipExplodeTTL = 15
+const (
+	playerHeight = 8
+	playerwidth  = 16
 
-// 	shotSpeed      = 540
-// 	shotExplodeTTL = 60
-// 	shotMissedY    = 25
+	// Start positions for player props
+	playerX = 1
+	playerY = originalHeight - (playerHeight * 4)
 
-// 	// Start positions for player props
-// 	playerX = 1
-// 	playerY = originalHeight - (playerHeight * 4)
+	// 	shipSpeed      = 60
+	// 	shipExplodeTTL = 15
 
-// 	startLives = 3
-// )
+	// 	shotSpeed      = 540
+	// 	shotExplodeTTL = 60
+	// 	shotMissedY    = 25
+
+	// 	startLives = 3
+)
+
+type player struct {
+	*screen2d.Entity
+	direction int
+	x, y      int32
+	score     int
+	lives     int
+	extraUsed bool
+}
+
+func newPlayer(game *game) *player {
+	p := &player{
+		Entity:    screen2d.NewEntity(),
+		x:         playerX,
+		y:         playerY,
+		lives:     3,
+		extraUsed: false,
+	}
+	p.SetSprite(game.sprites.GetSprite(keyPlayerSprite))
+	p.SetPos(playerX, playerY, 0)
+	p.Scale = game.scale
+
+	return p
+}
+
+func (p *player) update(ticks uint32, elapsed float32) {
+	x, y := translatePos(p.X, p.Y, p.Scale)
+	p.Sprite.SetPos(x, y, 0)
+	p.Sprite.Scale = p.Scale
+}
+
+// func (p *player) moveLeft() {
+
+// 	if p.lives == 0 || p.shipState != shipAlive {
+// 		return
+// 	}
+// 	if p.Pos.X > 0 {
+// 		p.Pos.X = p.Pos.X - float32(shipSpeed*p.Scene.ElapsedTime())
+// 		return
+// 	}
+// 	p.Pos.X = 0
+// }
+
+// func (p *player) moveRight() {
+// 	if p.lives == 0 || p.shipState != shipAlive {
+// 		return
+// 	}
+// 	if int32(p.Pos.X)+p.width < originalWidth {
+// 		p.Pos.X = p.Pos.X + float32(shipSpeed*p.Scene.ElapsedTime())
+// 		return
+// 	}
+// 	p.Pos.X = float32(originalWidth - p.width)
+// }
 
 // type shipState int
 
@@ -61,16 +116,6 @@ package main
 
 // 	width  int32
 // 	height int32
-// }
-
-// func newPlayer(game *game) *player {
-// 	p := &player{
-// 		Actor:     gfx.NewActor("player"),
-// 		ship:      gfx.NewProp("player ship", nil, game.transformXYZ),
-// 		shot:      gfx.NewProp("player shot", nil, game.transformXYZ),
-// 		shotState: shotAvailable,
-// 	}
-// 	return p
 // }
 
 // func (p *player) Start(scene *gfx.Scene) {
