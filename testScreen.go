@@ -26,6 +26,7 @@ func newTestScene(game *game) *testScreen {
 func (s *testScreen) activate() {
 	s.game.screen.ClearFuncs()
 	s.game.screen.SetKeyDownFunc(s.onKeyDown)
+	s.game.screen.SetKeyUpFunc(s.onKeyUp)
 	s.game.screen.SetUpdateFunc(s.onUpdate)
 	s.game.screen.SetDrawFunc(s.onDraw)
 }
@@ -37,9 +38,9 @@ func (s *testScreen) onKeyDown(e *sdl.KeyboardEvent) {
 	case sdl.SCANCODE_Q:
 		s.game.screen.Close()
 	case sdl.SCANCODE_LEFT:
-		//
+		s.p1.moveLeft()
 	case sdl.SCANCODE_RIGHT:
-		//
+		s.p1.moveRight()
 	case sdl.SCANCODE_V:
 		//
 	case sdl.SCANCODE_H:
@@ -47,25 +48,15 @@ func (s *testScreen) onKeyDown(e *sdl.KeyboardEvent) {
 	}
 }
 
+func (s *testScreen) onKeyUp(e *sdl.KeyboardEvent) {
+	switch e.Keysym.Scancode {
+	case sdl.SCANCODE_LEFT, sdl.SCANCODE_RIGHT:
+		s.p1.stopMoving()
+	}
+}
+
 func (s *testScreen) onUpdate(ticks uint32, elapsed float32) {
 	s.p1.update(ticks, elapsed)
-	// kb := s.KBState()
-
-	// if kb.IsKeyDown(sdl.SCANCODE_LEFT) != kb.IsKeyDown(sdl.SCANCODE_RIGHT) {
-	// 	if kb.IsKeyDown(sdl.SCANCODE_LEFT) {
-	// 		s.p1.moveLeft()
-	// 	} else if kb.IsKeyDown(sdl.SCANCODE_RIGHT) {
-	// 		s.p1.moveRight()
-	// 	}
-	// }
-	// if kb.OnKeyDown(sdl.SCANCODE_SPACE) {
-	// 	s.p1.fireShot()
-	// }
-	// if s.p1.shotState == shotInFlight {
-	// 	if s.alienRack.checkForHit(s.p1) {
-	// 		s.p1.shotState = shotHit
-	// 	}
-	// }
 }
 
 func (s *testScreen) onDraw() {

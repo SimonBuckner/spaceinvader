@@ -171,7 +171,7 @@ func calcScale(w, h int32) float32 {
 	return float32(rW)
 }
 
-func translatePos(x, y int32, scale float32) (tX, tY int32) {
+func translatePos(x, y float32, scale float32) (tX, tY int32) {
 
 	scaledW := float32(originalWidth) * scale
 	scaledH := float32(originalHeight) * scale
@@ -179,8 +179,8 @@ func translatePos(x, y int32, scale float32) (tX, tY int32) {
 	offsetX := (float32(winWidth) - scaledW) / 2
 	offsetY := (float32(winHeight) - scaledH) / 2
 
-	scaledX := float32(x) * scale
-	scaledY := float32(y) * scale
+	scaledX := x * scale
+	scaledY := y * scale
 
 	tX = int32(scaledX + offsetX)
 	tY = int32(scaledY + offsetY)
@@ -188,10 +188,10 @@ func translatePos(x, y int32, scale float32) (tX, tY int32) {
 	return
 }
 
-func translatePosDebug(x, y int32, scale float32) (int32, int32) {
+func translatePosDebug(x, y float32, scale float32) (int32, int32) {
 	tX, tY := translatePos(x, y, scale)
 
-	fmt.Printf("X1: %04d Y1: %04d  -  X2: %04d Y2: %04d\n", x, y, tX, tY)
+	fmt.Printf("X1: %f Y1: %f  -  X2: %04d Y2: %04d\n", x, y, tX, tY)
 
 	return tX, tY
 }

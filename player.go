@@ -1,6 +1,8 @@
 package main
 
-import "github.com/SimonBuckner/screen2d"
+import (
+	"github.com/SimonBuckner/screen2d"
+)
 
 const (
 	playerHeight = 8
@@ -10,68 +12,68 @@ const (
 	playerX = 1
 	playerY = originalHeight - (playerHeight * 4)
 
-	// 	shipSpeed      = 60
+	shipSpeed float32 = 60
 	// 	shipExplodeTTL = 15
 
 	// 	shotSpeed      = 540
 	// 	shotExplodeTTL = 60
 	// 	shotMissedY    = 25
+)
 
-	// 	startLives = 3
+type playerState int
+
+const (
+	playerReady playerState = iota
+	playerAlive
+	playerHit
+	plyaerDead
 )
 
 type player struct {
 	*screen2d.Entity
-	direction int
-	x, y      int32
+	direction float32
 	score     int
 	lives     int
 	extraUsed bool
+	state     playerState
 }
 
 func newPlayer(game *game) *player {
 	p := &player{
 		Entity:    screen2d.NewEntity(),
-		x:         playerX,
-		y:         playerY,
 		lives:     3,
 		extraUsed: false,
+		state:     playerAlive,
 	}
+	p.X = playerX
+	p.Y = playerY
 	p.SetSprite(game.sprites.GetSprite(keyPlayerSprite))
 	p.SetPos(playerX, playerY, 0)
 	p.Scale = game.scale
+	p.SetCalcScreenXYFunc(translatePos)
 
 	return p
 }
 
 func (p *player) update(ticks uint32, elapsed float32) {
-	x, y := translatePos(p.X, p.Y, p.Scale)
-	p.Sprite.SetPos(x, y, 0)
-	p.Sprite.Scale = p.Scale
+
+	newX := p.X + (p.direction * shipSpeed * elapsed)
+	if newX > 0 && int(newX) < originalWidth-playerwidth {
+		p.X = newX
+	}
 }
 
-// func (p *player) moveLeft() {
+func (p *player) moveLeft() {
+	p.direction = -1
+}
 
-// 	if p.lives == 0 || p.shipState != shipAlive {
-// 		return
-// 	}
-// 	if p.Pos.X > 0 {
-// 		p.Pos.X = p.Pos.X - float32(shipSpeed*p.Scene.ElapsedTime())
-// 		return
-// 	}
-// 	p.Pos.X = 0
-// }
+func (p *player) moveRight() {
+	p.direction = +1
+}
 
-// func (p *player) moveRight() {
-// 	if p.lives == 0 || p.shipState != shipAlive {
-// 		return
-// 	}
-// 	if int32(p.Pos.X)+p.width < originalWidth {
-// 		p.Pos.X = p.Pos.X + float32(shipSpeed*p.Scene.ElapsedTime())
-// 		return
-// 	}
-// 	p.Pos.X = float32(originalWidth - p.width)
-// }
+func (p *player) stopMoving() {
+	p.direction = 0
+}
 
 // type shipState int
 
