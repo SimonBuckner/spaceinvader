@@ -1,14 +1,17 @@
 package main
 
 import (
+	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 const testScreenName = "Test Scene"
 
 type testScreen struct {
-	game *game
-	p1   *player
+	game   *game
+	keyb   *screen2d.KBState
+	p1     *player
+	p1Shot *playerShot
 	// score     *score
 	// alienRack *alienRack
 }
@@ -16,8 +19,10 @@ type testScreen struct {
 func newTestScene(game *game) *testScreen {
 
 	s := &testScreen{
-		game: game,
-		p1:   newPlayer(game),
+		game:   game,
+		keyb:   game.screen.GetKBState(),
+		p1:     newPlayer(game),
+		p1Shot: newPlayerShot(game),
 		// alienRack: newAlienRack(game),
 	}
 	return s
@@ -26,7 +31,7 @@ func newTestScene(game *game) *testScreen {
 func (s *testScreen) activate() {
 	s.game.screen.ClearFuncs()
 	s.game.screen.SetKeyDownFunc(s.onKeyDown)
-	s.game.screen.SetKeyUpFunc(s.onKeyUp)
+	// s.game.screen.SetKeyUpFunc(s.onKeyUp)
 	s.game.screen.SetUpdateFunc(s.onUpdate)
 	s.game.screen.SetDrawFunc(s.onDraw)
 }
@@ -48,17 +53,27 @@ func (s *testScreen) onKeyDown(e *sdl.KeyboardEvent) {
 	}
 }
 
-func (s *testScreen) onKeyUp(e *sdl.KeyboardEvent) {
-	switch e.Keysym.Scancode {
-	case sdl.SCANCODE_LEFT, sdl.SCANCODE_RIGHT:
+func (s *testScreen) onUpdate(ticks uint32, elapsed float32) {
+
+	if s.keyb.IsKeyDown(sdl.SCANCODE_LEFT) != s.keyb.IsKeyDown(sdl.SCANCODE_RIGHT) {
+		if s.keyb.IsKeyDown(sdl.SCANCODE_LEFT) {
+			s.p1.moveLeft()
+		} else {
+			s.p1.moveRight()
+		}
+	} else {
 		s.p1.stopMoving()
 	}
-}
 
-func (s *testScreen) onUpdate(ticks uint32, elapsed float32) {
+	if s.keyb.IsKeyDown(sdl.SCANCODE_SPACE) {
+		s.p1Shot.fire()
+	}
+
 	s.p1.update(ticks, elapsed)
+	s.p1Shot.update(ticks, elapsed, s.p1.X)
 }
 
 func (s *testScreen) onDraw() {
 	s.p1.Draw()
+	s.p1Shot.Draw()
 }

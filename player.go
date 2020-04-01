@@ -56,7 +56,6 @@ func newPlayer(game *game) *player {
 }
 
 func (p *player) update(ticks uint32, elapsed float32) {
-
 	newX := p.X + (p.direction * shipSpeed * elapsed)
 	if newX > 0 && int(newX) < originalWidth-playerwidth {
 		p.X = newX
@@ -209,14 +208,6 @@ func (p *player) stopMoving() {
 // 	}
 // }
 
-// // Draw ..
-// func (p *player) Draw() {
-// 	if p.Visible {
-// 		p.ship.Draw(p.Scene.Renderer())
-// 		p.shot.Draw(p.Scene.Renderer())
-// 	}
-// }
-
 // func (p *player) resetShip() {
 // 	p.Pos.SetInt32(playerX, playerY, 0)
 // 	p.score = 0
@@ -238,29 +229,6 @@ func (p *player) stopMoving() {
 
 // func (p *player) setDead() {
 // 	p.Visible = false
-// }
-
-// func (p *player) moveLeft() {
-
-// 	if p.lives == 0 || p.shipState != shipAlive {
-// 		return
-// 	}
-// 	if p.Pos.X > 0 {
-// 		p.Pos.X = p.Pos.X - float32(shipSpeed*p.Scene.ElapsedTime())
-// 		return
-// 	}
-// 	p.Pos.X = 0
-// }
-
-// func (p *player) moveRight() {
-// 	if p.lives == 0 || p.shipState != shipAlive {
-// 		return
-// 	}
-// 	if int32(p.Pos.X)+p.width < originalWidth {
-// 		p.Pos.X = p.Pos.X + float32(shipSpeed*p.Scene.ElapsedTime())
-// 		return
-// 	}
-// 	p.Pos.X = float32(originalWidth - p.width)
 // }
 
 // func (p *player) fireShot() {
