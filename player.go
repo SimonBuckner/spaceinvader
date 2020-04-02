@@ -4,22 +4,6 @@ import (
 	"github.com/SimonBuckner/screen2d"
 )
 
-const (
-	playerHeight = 8
-	playerwidth  = 16
-
-	// Start positions for player props
-	playerX = 1
-	playerY = originalHeight - (playerHeight * 4)
-
-	shipSpeed float32 = 60
-	// 	shipExplodeTTL = 15
-
-	// 	shotSpeed      = 540
-	// 	shotExplodeTTL = 60
-	// 	shotMissedY    = 25
-)
-
 type playerState int
 
 const (
@@ -31,6 +15,7 @@ const (
 
 type player struct {
 	*screen2d.Entity
+	game      *game
 	direction float32
 	score     int
 	lives     int
@@ -41,18 +26,22 @@ type player struct {
 func newPlayer(game *game) *player {
 	p := &player{
 		Entity:    screen2d.NewEntity(),
+		game:      game,
 		lives:     3,
 		extraUsed: false,
 		state:     playerAlive,
 	}
-	p.X = playerX
-	p.Y = playerY
-	p.SetSprite(game.sprites.GetSprite(keyPlayerSprite))
-	p.SetPos(playerX, playerY, 0)
-	p.Scale = game.scale
 	p.SetCalcScreenXYFunc(translatePos)
+	p.Scale = game.scale
 
 	return p
+}
+
+func (p *player) reset() {
+	p.X = playerX
+	p.Y = playerY
+	p.SetSprite(p.game.sprites.GetSprite(keyPlayerSprite))
+	p.SetPos(playerX, playerY, 0)
 }
 
 func (p *player) update(ticks uint32, elapsed float32) {

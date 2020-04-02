@@ -8,52 +8,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const (
-	originalWidth  = 224
-	originalHeight = 256
-	winWidth       = 1024
-	winHeight      = 768
-	alienRows      = 5
-	alienCols      = 11
-	alienRowHeight = 16
-	alienColWidth  = 16
-	alienStartX    = 10
-	alienStartY    = originalHeight - 0x78
-)
-
-const (
-	keyAlienSprCYA screen2d.SpriteMapKey = iota
-	keyAlienSprCYB
-	keyAlienSprA0
-	keyAlienSprA1
-	keyAlienSprB0
-	keyAlienSprB1
-	keyAlienSprC0
-	keyAlienSprC1
-	keyPlayerSprite
-	keyPlrBlowupSprite0
-	keyPlrBlowupSprite1
-	keyPlayerShotSpr
-	keyShotExploding
-	keyAlienExplode
-	keySquiglyShot0
-	keySquiglyShot2
-	keySquiglyShot3
-	keyPlungerShot0
-	keyPlungerShot1
-	keyPlungerShot2
-	keyPlungerShot3
-	keyRollShot0
-	keyRollShot1
-	keyRollShot2
-	keyRollShot3
-	keyShieldImage
-	keySpriteSaucer
-	keySpriteSaucerExp
-	keyAlienSprCA
-	keyAlienSprCB
-)
-
 type game struct {
 	screen          *screen2d.Screen
 	scale           float32

@@ -8,30 +8,33 @@ import (
 const testScreenName = "Test Scene"
 
 type testScreen struct {
-	game   *game
-	keyb   *screen2d.KBState
-	p1     *player
-	p1Shot *playerShot
-	// score     *score
-	// alienRack *alienRack
+	game        *game
+	keyb        *screen2d.KBState
+	p1          *player
+	p1Shot      *playerShot
+	p1AlienRack *alienRack
 }
 
 func newTestScene(game *game) *testScreen {
 
 	s := &testScreen{
-		game:   game,
-		keyb:   game.screen.GetKBState(),
-		p1:     newPlayer(game),
-		p1Shot: newPlayerShot(game),
-		// alienRack: newAlienRack(game),
+		game:        game,
+		keyb:        game.screen.GetKBState(),
+		p1:          newPlayer(game),
+		p1Shot:      newPlayerShot(game),
+		p1AlienRack: newAlienRack(game),
 	}
+
 	return s
 }
 
 func (s *testScreen) activate() {
 	s.game.screen.ClearFuncs()
+
+	s.p1.reset()
+	s.p1Shot.reset()
+	s.p1AlienRack.reset(1)
 	s.game.screen.SetKeyDownFunc(s.onKeyDown)
-	// s.game.screen.SetKeyUpFunc(s.onKeyUp)
 	s.game.screen.SetUpdateFunc(s.onUpdate)
 	s.game.screen.SetDrawFunc(s.onDraw)
 }
@@ -71,9 +74,11 @@ func (s *testScreen) onUpdate(ticks uint32, elapsed float32) {
 
 	s.p1.update(ticks, elapsed)
 	s.p1Shot.update(ticks, elapsed, s.p1.X)
+	s.p1AlienRack.update(ticks, elapsed, s.p1.X)
 }
 
 func (s *testScreen) onDraw() {
 	s.p1.Draw()
 	s.p1Shot.Draw()
+	s.p1AlienRack.draw()
 }
