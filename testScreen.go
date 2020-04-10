@@ -68,6 +68,9 @@ func (s *testScreen) onUpdate(ticks uint32, elapsed float32) {
 		s.p1.stopMoving()
 	}
 
+	if s.keyb.IsKeyDown(sdl.SCANCODE_Q) {
+		s.game.screen.Close()
+	}
 	if s.keyb.IsKeyDown(sdl.SCANCODE_SPACE) {
 		s.p1Shot.fire()
 	}

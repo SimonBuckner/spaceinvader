@@ -2,7 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 	"runtime"
+	"runtime/pprof"
 
 	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
@@ -10,6 +14,7 @@ import (
 
 type game struct {
 	screen          *screen2d.Screen
+	keyb            *screen2d.KBState
 	scale           float32
 	backgroundColor sdl.Color
 	sprites         *screen2d.SpriteMap
@@ -18,6 +23,12 @@ type game struct {
 
 func main() {
 	runtime.LockOSThread()
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+	runtime.SetBlockProfileRate(1)
+	runtime.SetMutexProfileFraction(-1)
 
 	g := &game{
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
@@ -34,15 +45,26 @@ func main() {
 	}
 	defer g.screen.Destroy()
 
+	g.keyb = g.screen.GetKBState()
 	g.loadSpriteMap()
 	g.test = newTestScene(g)
 	g.activate()
+
+	cProf, err := os.Create("./cpuProf.pprof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cProf.Close()
+	pprof.StartCPUProfile(cProf)
+	defer pprof.StopCPUProfile()
+
 	g.screen.Run()
 }
 
 func (g *game) activate() {
 	g.screen.ClearFuncs()
 	g.screen.SetKeyDownFunc(g.onKeyDown)
+	g.screen.SetUpdateFunc(g.onUpdate)
 }
 
 func (g *game) loadSpriteMap() {
@@ -115,6 +137,16 @@ func (g *game) onKeyDown(e *sdl.KeyboardEvent) {
 	}
 }
 
+func (g *game) onUpdate(ticks uint32, elapsed float32) {
+
+	if g.keyb.IsKeyDown(sdl.SCANCODE_Q) {
+		fmt.Println("Game key down")
+		g.screen.Close()
+	} else if g.keyb.IsKeyDown(sdl.SCANCODE_F1) {
+		fmt.Println("Game key down")
+		g.test.activate()
+	}
+}
 func calcScale(w, h int32) float32 {
 
 	rW := w / originalWidth
