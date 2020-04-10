@@ -91,3 +91,7 @@ func (a *alien) update(ticks uint32, elapsed float32) {
 		}
 	}
 }
+
+func (a *alien) setHit() {
+	a.state = alienExploding
+}

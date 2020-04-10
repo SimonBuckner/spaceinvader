@@ -77,7 +77,8 @@ func (s *testScreen) onUpdate(ticks uint32, elapsed float32) {
 
 	s.p1.update(ticks, elapsed)
 	s.p1Shot.update(ticks, elapsed, s.p1.X)
-	s.p1AlienRack.update(ticks, elapsed, s.p1.X)
+	s.p1AlienRack.update(ticks, elapsed, s.p1, s.p1Shot)
+
 }
 
 func (s *testScreen) onDraw() {

@@ -34,7 +34,7 @@ const (
 	playerX = 1
 	playerY = originalHeight - (playerHeight * 4)
 
-	shipSpeed float32 = 60
+	shipSpeed float32 = 30
 	// 	shipExplodeTTL = 15
 
 	// 	shotSpeed      = 540
@@ -43,8 +43,9 @@ const (
 )
 const (
 	// Player Shot seettings
-	playerShotSpeed   float32 = 500
-	playerShotMissedY float32 = 25
+	playerShotSpeed     float32 = 500
+	playerShotMissedY   float32 = 25
+	playerShotMissedTTL uint32  = 500
 	// 	shotExplodeTTL = 15
 	// 	shotExplodeTTL = 60
 )

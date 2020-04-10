@@ -1,5 +1,9 @@
 package main
 
+import (
+	"github.com/SimonBuckner/screen2d"
+)
+
 type alienRack struct {
 	aliens []*alien
 	game   *game
@@ -42,7 +46,7 @@ func (ar *alienRack) reset(level int) {
 	}
 }
 
-func (ar *alienRack) update(ticks uint32, elapsed float32, shipX float32) {
+func (ar *alienRack) update(ticks uint32, elapsed float32, p *player, shot *playerShot) {
 	x := ar.x
 	y := ar.y
 
@@ -53,11 +57,18 @@ func (ar *alienRack) update(ticks uint32, elapsed float32, shipX float32) {
 			ar.aliens[i].Y = float32(y)
 			x = x + alienColWidth
 			ar.aliens[i].update(ticks, elapsed)
+			if ar.aliens[i].state == alienAlive {
+				if screen2d.CheckBoxHit(ar.aliens[i], shot) {
+					ar.aliens[i].setHit()
+					shot.setHit()
+				}
+			}
 			i++
 		}
 		x = alienStartX
 		y = y - alienRowHeight
 	}
+
 }
 
 func (ar *alienRack) draw() {
