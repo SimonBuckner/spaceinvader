@@ -9,6 +9,9 @@ const (
 
 	winWidth  = 1024
 	winHeight = 768
+
+	endFrameTTL = 1.0 / 60
+	midFrameTTL = endFrameTTL / 2
 )
 
 const (
@@ -34,7 +37,7 @@ const (
 	playerX = 1
 	playerY = originalHeight - (playerHeight * 4)
 
-	shipSpeed float32 = 30
+	shipSpeed = 60
 	// 	shipExplodeTTL = 15
 
 	// 	shotSpeed      = 540
@@ -43,9 +46,9 @@ const (
 )
 const (
 	// Player Shot seettings
-	playerShotSpeed     float32 = 500
-	playerShotMissedY   float32 = 25
-	playerShotMissedTTL uint32  = 500
+	playerShotSpeed     = 240
+	playerShotMissedY   = 25
+	playerShotMissedTTL = 500
 	// 	shotExplodeTTL = 15
 	// 	shotExplodeTTL = 60
 )

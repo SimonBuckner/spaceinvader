@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/SimonBuckner/screen2d"
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 type alienState int
@@ -24,11 +23,11 @@ const (
 
 type alien struct {
 	*screen2d.Entity
-	game       *game
-	state      alienState
-	breed      alienBreed
-	frame      int
-	frameStart uint32
+	game  *game
+	state alienState
+	breed alienBreed
+	frame int
+	// moved bool
 }
 
 func newAlien(game *game) *alien {
@@ -57,41 +56,44 @@ func (a *alien) setBreed(breed alienBreed) {
 func (a *alien) reset() {
 	a.state = alienAlive
 	a.frame = 0
-	a.frameStart = sdl.GetTicks()
+	a.Visible = true
 }
 
 func (a *alien) update(ticks uint32, elapsed float32) {
-	if a.frame == 0 {
-		switch a.breed {
-		case alienCrab:
-			a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
-		case alienOctopus:
-			a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB0))
-		case alienSquid:
-			a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC0))
-		}
+	switch a.state {
+	case alienAlive:
+		if a.frame == 0 {
+			switch a.breed {
+			case alienCrab:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
+			case alienOctopus:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB0))
+			case alienSquid:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC0))
+			}
 
-	} else {
-		switch a.breed {
-		case alienCrab:
-			a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA1))
-		case alienOctopus:
-			a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB1))
-		case alienSquid:
-			a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC1))
-		}
+		} else {
+			switch a.breed {
+			case alienCrab:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA1))
+			case alienOctopus:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB1))
+			case alienSquid:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC1))
+			}
 
-	}
-
-	if ticks-a.frameStart > alienFrameTimer {
-		a.frameStart = ticks
-		a.frame++
-		if a.frame > 1 {
-			a.frame = 0
 		}
+	case alienExploding:
+		a.SetSprite((a.game.sprites.GetSprite(keyAlienExplode)))
+	case alienDead:
+		a.Visible = false
 	}
 }
 
 func (a *alien) setHit() {
 	a.state = alienExploding
+}
+
+func (a *alien) setDead() {
+	a.state = alienDead
 }

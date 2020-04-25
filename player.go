@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/SimonBuckner/screen2d"
 )
 
@@ -49,9 +47,6 @@ func (p *player) reset() {
 func (p *player) update(ticks uint32, elapsed float32) {
 	delta := (p.direction * shipSpeed * elapsed)
 	newX := p.X + delta
-	if delta > 0.6 || delta < -0.6 {
-		fmt.Printf("Distance/Elapsed/Ticks: %f / %f / %d \n", delta, elapsed, ticks)
-	}
 	if newX > 0 && int(newX) < originalWidth-playerwidth {
 		p.X = newX
 	}

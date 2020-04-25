@@ -1,15 +1,32 @@
 package main
 
 import (
+	"math"
+
 	"github.com/SimonBuckner/screen2d"
 )
 
+type arState int
+
+const (
+	arReady arState = iota
+	arMoving
+	arExploding
+)
+
 type alienRack struct {
-	aliens []*alien
-	game   *game
-	level  int
-	x, y   float32
-	scale  float32
+	aliens       []*alien
+	game         *game
+	state        arState
+	level        int
+	x, y         float32
+	scale        float32
+	currentFrame int
+	cursor       int
+	stepL        float32
+	stepR        float32
+	direction    int
+	timer        int
 }
 
 func newAlienRack(game *game) *alienRack {
@@ -26,10 +43,9 @@ func newAlienRack(game *game) *alienRack {
 
 func (ar *alienRack) reset(level int) {
 
-	ar.x = alienStartX
-	ar.y = alienStartY
-
 	i := 0
+	x := alienStartX
+	y := alienStartY
 	for row := int32(0); row < alienRows; row++ {
 		for col := int32(0); col < alienCols; col++ {
 			switch row {
@@ -41,32 +57,123 @@ func (ar *alienRack) reset(level int) {
 				ar.aliens[i].setBreed(alienSquid)
 			}
 			ar.aliens[i].reset()
-			i++
-		}
-	}
-}
-
-func (ar *alienRack) update(ticks uint32, elapsed float32, p *player, shot *playerShot) {
-	x := ar.x
-	y := ar.y
-
-	i := 0
-	for row := int32(0); row < alienRows; row++ {
-		for col := int32(0); col < alienCols; col++ {
 			ar.aliens[i].X = float32(x)
 			ar.aliens[i].Y = float32(y)
 			x = x + alienColWidth
-			ar.aliens[i].update(ticks, elapsed)
-			if ar.aliens[i].state == alienAlive {
-				if screen2d.CheckBoxHit(ar.aliens[i], shot) {
-					ar.aliens[i].setHit()
-					shot.setHit()
-				}
-			}
+
 			i++
 		}
 		x = alienStartX
 		y = y - alienRowHeight
+	}
+
+	ar.currentFrame = 0
+	ar.cursor = -1
+	ar.stepL = 2.0
+	ar.stepR = 2.0
+	ar.state = arMoving
+	ar.direction = 1
+}
+
+func (ar *alienRack) update(ticks uint32, elapsed float32, p *player, shot *playerShot) {
+	switch ar.state {
+	case arReady:
+
+	case arMoving:
+		ar.move()
+		ar.aliens[ar.cursor].frame = ar.currentFrame
+		if ar.checkForHit(shot) {
+			shot.setHit()
+			ar.state = arExploding
+			ar.timer = 10
+		}
+	case arExploding:
+		ar.timer--
+		if ar.timer == 0 {
+			ar.state = arMoving
+			for i, a := range ar.aliens {
+				if a.state == alienExploding {
+					ar.aliens[i].state = alienDead
+				}
+			}
+		}
+	}
+	for _, a := range ar.aliens {
+		a.update(ticks, elapsed)
+	}
+}
+
+func (ar *alienRack) checkForHit(shot *playerShot) bool {
+	for i := range ar.aliens {
+		if ar.aliens[i].state == alienAlive && screen2d.CheckBoxHit(ar.aliens[i], shot) {
+			if screen2d.CheckPixelHit(shot, ar.aliens[i]) {
+				ar.aliens[i].setHit()
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (ar *alienRack) advanceCursor() {
+	if ar.state != arMoving {
+		return
+	}
+	for {
+		ar.cursor++
+		if ar.cursor >= len(ar.aliens) {
+			ar.cursor = 0
+			if ar.currentFrame == 0 {
+				ar.currentFrame = 1
+			} else {
+				ar.currentFrame = 0
+			}
+		}
+		if ar.aliens[ar.cursor].state == alienAlive {
+			return
+		}
+	}
+}
+
+func (ar *alienRack) remainCount() int {
+	rc := 0
+	for _, a := range ar.aliens {
+		if a.state == alienAlive {
+			rc++
+		}
+	}
+	return rc
+}
+
+func (ar *alienRack) move() {
+
+	if ar.cursor == 0 {
+
+		minX := float32(math.MaxFloat32)
+		maxX := float32(-1)
+
+		for i := range ar.aliens {
+			if ar.aliens[i].state == alienAlive {
+				if ar.aliens[i].X < minX {
+					minX = ar.aliens[i].X
+				}
+				if ar.aliens[i].X > maxX {
+					maxX = ar.aliens[i].X
+				}
+			}
+		}
+		if ar.direction < 0 && minX <= 0 {
+			ar.direction = +1
+		}
+
+		if ar.direction > 0 && maxX >= (originalWidth-alienColWidth) {
+			ar.direction = -1
+		}
+	}
+	if ar.direction > 0 {
+		ar.aliens[ar.cursor].X += ar.stepR
+	} else {
+		ar.aliens[ar.cursor].X -= ar.stepL
 	}
 
 }

@@ -2,11 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
-	"os"
 	"runtime"
-	"runtime/pprof"
 
 	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
@@ -18,17 +14,11 @@ type game struct {
 	scale           float32
 	backgroundColor sdl.Color
 	sprites         *screen2d.SpriteMap
-	test            *testScreen
+	pm              *playMode
 }
 
 func main() {
 	runtime.LockOSThread()
-
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
-	runtime.SetBlockProfileRate(1)
-	runtime.SetMutexProfileFraction(-1)
 
 	g := &game{
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
@@ -37,7 +27,9 @@ func main() {
 	g.scale = calcScale(winWidth, winHeight)
 
 	{
-		screen, err := screen2d.NewScreen(winWidth, winHeight, "Space Invaders")
+		screen, err := screen2d.NewScreen(winWidth, winHeight, "Space Invaders",
+			screen2d.SetVSync(true),
+			screen2d.SetScalingQuality(screen2d.ScreenScalingNearestPixel))
 		if err != nil {
 			panic(err)
 		}
@@ -47,16 +39,8 @@ func main() {
 
 	g.keyb = g.screen.GetKBState()
 	g.loadSpriteMap()
-	g.test = newTestScene(g)
+	g.pm = newPlayMode(g)
 	g.activate()
-
-	cProf, err := os.Create("./cpuProf.pprof")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer cProf.Close()
-	pprof.StartCPUProfile(cProf)
-	defer pprof.StopCPUProfile()
 
 	g.screen.Run()
 }
@@ -133,7 +117,7 @@ func (g *game) onKeyDown(e *sdl.KeyboardEvent) {
 	case sdl.SCANCODE_D:
 		// g.stage.DumpActors()
 	case sdl.SCANCODE_F1:
-		g.test.activate()
+		g.pm.activate()
 	}
 }
 
@@ -144,7 +128,7 @@ func (g *game) onUpdate(ticks uint32, elapsed float32) {
 		g.screen.Close()
 	} else if g.keyb.IsKeyDown(sdl.SCANCODE_F1) {
 		fmt.Println("Game key down")
-		g.test.activate()
+		g.pm.activate()
 	}
 }
 func calcScale(w, h int32) float32 {

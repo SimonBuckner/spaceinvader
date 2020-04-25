@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -48,12 +46,12 @@ func (ps *playerShot) update(ticks uint32, elapsed float32, shipX float32) {
 	case playerShotReady:
 		ps.X = shipX + float32(playerwidth-ps.width+1)/2
 	case playerShotFired:
-		ps.Y = ps.Y - (playerShotSpeed * elapsed)
+		ps.Y = ps.Y - 4
 		if ps.Y < playerShotMissedY {
+			ps.Y = playerShotMissedY
 			ps.setMissed()
 		}
 	case playerShotMissed, playerShotHit:
-		fmt.Printf("shot missed/hit update %d\n", (ticks - ps.explodeTimer))
 		if (ticks - ps.explodeTimer) > playerShotMissedTTL {
 			ps.setAvailable(shipX)
 		}
