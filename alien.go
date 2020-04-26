@@ -46,10 +46,10 @@ func (a *alien) setBreed(breed alienBreed) {
 	a.breed = breed
 	switch a.breed {
 	case alienOctopus:
-		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB0))
+		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
 		a.score = 10
 	case alienCrab:
-		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
+		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB0))
 		a.score = 20
 	case alienSquid:
 		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC0))
@@ -68,9 +68,9 @@ func (a *alien) update(ticks uint32, elapsed float32) {
 	case alienAlive:
 		if a.frame == 0 {
 			switch a.breed {
-			case alienCrab:
-				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
 			case alienOctopus:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
+			case alienCrab:
 				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB0))
 			case alienSquid:
 				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC0))
@@ -78,9 +78,9 @@ func (a *alien) update(ticks uint32, elapsed float32) {
 
 		} else {
 			switch a.breed {
-			case alienCrab:
-				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA1))
 			case alienOctopus:
+				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA1))
+			case alienCrab:
 				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB1))
 			case alienSquid:
 				a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC1))

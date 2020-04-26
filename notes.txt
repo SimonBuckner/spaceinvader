@@ -1,0 +1,24 @@
+
+
+type audioState struct {
+	explosionBytes []byte
+	deviceID       sdl.AudioDeviceID
+	audioSpec      *sdl.AudioSpec
+}
+
+explosionBytes, audioSpec := sdl.LoadWAV("explode.wav")
+audioDevID, err := sdl.OpenAudioDevice("", false, audioSpec, nil, 0)
+if err != nil {
+	panic(err)
+}
+defer sdl.FreeWAV(explosionBytes)
+
+audioState := audioState{
+	explosionBytes: explosionBytes,
+	deviceID:       audioDevID,
+	audioSpec:      audioSpec,
+}
+
+sdl.ClearQueuedAudio(audioState.deviceID)
+sdl.QueueAudio(audioState.deviceID, audioState.explosionBytes)
+sdl.PauseAudioDevice(audioState.deviceID, false)

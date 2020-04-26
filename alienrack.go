@@ -50,9 +50,9 @@ func (ar *alienRack) reset(level int) {
 		for col := int32(0); col < alienCols; col++ {
 			switch row {
 			case 0, 1:
-				ar.aliens[i].setBreed(alienCrab)
-			case 2, 3:
 				ar.aliens[i].setBreed(alienOctopus)
+			case 2, 3:
+				ar.aliens[i].setBreed(alienCrab)
 			case 4:
 				ar.aliens[i].setBreed(alienSquid)
 			}
