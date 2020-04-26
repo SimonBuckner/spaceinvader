@@ -188,6 +188,9 @@ func (pm *playMode) onUpdate(ticks uint32, elapsed float32) {
 	// Move alien rack
 	pm.player.alienRack.update(ticks, elapsed, pm.p1, pm.player.shot)
 
+	pm.p1score.setText(pm.p1.getScore())
+	pm.p2score.setText(pm.p2.getScore())
+
 }
 
 func (pm *playMode) onDraw() {

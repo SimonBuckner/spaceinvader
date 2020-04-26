@@ -86,10 +86,12 @@ func (ar *alienRack) update(ticks uint32, elapsed float32, p *player, shot *play
 	case arMoving:
 		ar.move()
 		ar.aliens[ar.cursor].frame = ar.currentFrame
-		if ar.checkForHit(shot) {
+
+		if alien := ar.checkForHit(shot); alien != nil {
 			shot.setHit()
 			ar.state = arExploding
 			ar.timer = 10
+			p.score += alien.score
 		}
 	case arExploding:
 		ar.timer--
@@ -107,17 +109,17 @@ func (ar *alienRack) update(ticks uint32, elapsed float32, p *player, shot *play
 	}
 }
 
-func (ar *alienRack) checkForHit(shot *playerShot) bool {
+func (ar *alienRack) checkForHit(shot *playerShot) *alien {
 	for i := range ar.aliens {
 		if ar.aliens[i].state == alienAlive && screen2d.CheckBoxHit(ar.aliens[i], shot) {
 			if screen2d.CheckPixelHit(shot, ar.aliens[i]) {
 				ar.aliens[i].setHit()
 				shot.setHit()
-				return true
+				return ar.aliens[i]
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 func (ar *alienRack) advanceCursor() {

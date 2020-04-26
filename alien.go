@@ -27,6 +27,7 @@ type alien struct {
 	state alienState
 	breed alienBreed
 	frame int
+	score int
 	// moved bool
 }
 
@@ -44,12 +45,15 @@ func newAlien(game *game) *alien {
 func (a *alien) setBreed(breed alienBreed) {
 	a.breed = breed
 	switch a.breed {
-	case alienCrab:
-		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
 	case alienOctopus:
 		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprB0))
+		a.score = 10
+	case alienCrab:
+		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprA0))
+		a.score = 20
 	case alienSquid:
 		a.SetSprite(a.game.sprites.GetSprite(keyAlienSprC0))
+		a.score = 30
 	}
 }
 
