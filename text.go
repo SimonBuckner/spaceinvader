@@ -12,6 +12,7 @@ type text struct {
 	atlas    *screen2d.SpriteAtlas
 	keys     map[rune]int32
 	colWidth int32
+	visible  bool
 }
 
 func newText(game *game) *text {
@@ -34,7 +35,9 @@ func (t *text) load(atlas *screen2d.SpriteAtlas, keys map[rune]int32) {
 }
 
 func (t *text) drawText() {
-
+	if t.visible == false {
+		return
+	}
 	x, y := t.X, t.Y
 	for _, r := range t.value {
 		if tileY, ok := t.keys[r]; ok {

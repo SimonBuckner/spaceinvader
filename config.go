@@ -9,9 +9,11 @@ const (
 
 	winWidth  = 1024
 	winHeight = 768
+)
 
-	endFrameTTL = 1.0 / 60
-	midFrameTTL = endFrameTTL / 2
+const (
+	pmReadyTTL      = 23 * 2
+	pmReadyDelayTTL = 3
 )
 
 const (

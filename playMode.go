@@ -34,6 +34,7 @@ type playMode struct {
 	frame      int
 	frameJog   uint32
 	timer      int
+	timer2     int
 	soundDelay int
 	soundTimer int
 }
@@ -70,21 +71,29 @@ func (pm *playMode) activate() {
 	pm.title.setText(scoreTitle)
 	pm.title.X = 0
 	pm.title.Y = 0
+	pm.title.visible = true
 
 	pm.p1score.setText(pm.p1.getScore())
 	pm.p1score.X = 14
 	pm.p1score.Y = 16
+	pm.p1score.visible = true
 
 	pm.hiscore.setText(fmt.Sprintf("%04d", pm.highScore))
 	pm.hiscore.X = 70
 	pm.hiscore.Y = 16
+	pm.hiscore.visible = true
 
 	pm.p2score.setText(pm.p2.getScore())
 	pm.p2score.X = 140
 	pm.p2score.Y = 16
+	pm.p2score.visible = true
 
 	pm.frame = 0
 	pm.frameStart = sdl.GetTicks()
+
+	pm.state = pmReady
+	pm.timer = pmReadyTTL
+	pm.timer2 = pmReadyDelayTTL
 
 }
 
@@ -103,6 +112,37 @@ func (pm *playMode) onKeyDown(e *sdl.KeyboardEvent) {
 
 func (pm *playMode) onUpdate(ticks uint32, elapsed float32) {
 
+	switch pm.state {
+	case pmReady:
+		pm.updateReady(ticks, elapsed)
+	case pmPlaying:
+		pm.updatePlaying(ticks, elapsed)
+	case pmLevelComplete:
+		pm.updateLevelComplete(ticks, elapsed)
+	case pmDead:
+		pm.updateDead(ticks, elapsed)
+	}
+
+}
+
+func (pm *playMode) updateReady(ticks uint32, elapsed float32) {
+	pm.timer2--
+	if pm.timer2 == 0 {
+		if pm.player == pm.p1 {
+			pm.p1score.visible = !pm.p1score.visible
+		} else {
+			pm.p2score.visible = !pm.p1score.visible
+		}
+		pm.timer2 = pmReadyDelayTTL
+		pm.timer--
+
+	}
+	if pm.timer == 0 {
+		pm.state = pmPlaying
+	}
+}
+
+func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 	if pm.keyb.IsKeyDown(sdl.SCANCODE_LEFT) != pm.keyb.IsKeyDown(sdl.SCANCODE_RIGHT) {
 		if pm.keyb.IsKeyDown(sdl.SCANCODE_LEFT) {
 			pm.player.moveLeft()
@@ -190,7 +230,12 @@ func (pm *playMode) onUpdate(ticks uint32, elapsed float32) {
 
 	pm.p1score.setText(pm.p1.getScore())
 	pm.p2score.setText(pm.p2.getScore())
+}
 
+func (pm *playMode) updateLevelComplete(ticks uint32, elapsed float32) {
+}
+
+func (pm *playMode) updateDead(ticks uint32, elapsed float32) {
 }
 
 func (pm *playMode) onDraw() {
