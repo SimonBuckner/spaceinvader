@@ -21,7 +21,6 @@ type player struct {
 	shot      *playerShot
 	alienRack *alienRack
 
-	direction float32
 	score     int
 	lives     int
 	extraUsed bool
@@ -56,23 +55,19 @@ func (p *player) reset() {
 }
 
 func (p *player) update(ticks uint32, elapsed float32) {
-	delta := (p.direction * shipSpeed * elapsed)
-	newX := p.X + delta
+	// delta := (p.direction * shipSpeed * elapsed)
+	newX := p.X
 	if newX > 0 && int(newX) < originalWidth-playerwidth {
 		p.X = newX
 	}
 }
 
 func (p *player) moveLeft() {
-	p.direction = -1
+	p.X--
 }
 
 func (p *player) moveRight() {
-	p.direction = +1
-}
-
-func (p *player) stopMoving() {
-	p.direction = 0
+	p.X++
 }
 
 func (p *player) getScore() string {

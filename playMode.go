@@ -103,10 +103,6 @@ func (pm *playMode) onKeyDown(e *sdl.KeyboardEvent) {
 		pm.game.activate()
 	case sdl.SCANCODE_Q:
 		pm.game.screen.Close()
-	case sdl.SCANCODE_LEFT:
-		pm.player.moveLeft()
-	case sdl.SCANCODE_RIGHT:
-		pm.player.moveRight()
 	}
 }
 
@@ -149,8 +145,6 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 		} else {
 			pm.player.moveRight()
 		}
-	} else {
-		pm.player.stopMoving()
 	}
 	if pm.keyb.IsKeyDown(sdl.SCANCODE_SPACE) {
 		pm.player.shot.fire()

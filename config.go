@@ -2,6 +2,9 @@ package main
 
 import "github.com/SimonBuckner/screen2d"
 
+/*
+	TTL measure time in frames
+*/
 const (
 	// Screen settings
 	originalWidth  = 224
@@ -12,8 +15,9 @@ const (
 )
 
 const (
-	pmReadyTTL      = 23 * 2
-	pmReadyDelayTTL = 3
+	// Play Mode settings
+	pmReadyTTL      = 23 * 2 // number of on/offs
+	pmReadyDelayTTL = 3      // Delay between each on/off
 )
 
 const (
@@ -39,20 +43,14 @@ const (
 	playerX = 1
 	playerY = originalHeight - (playerHeight * 4)
 
-	shipSpeed = 60
-	// 	shipExplodeTTL = 15
-
-	// 	shotSpeed      = 540
-	// 	shotExplodeTTL = 60
-	// 	shotMissedY    = 25
+	// shipSpeed = 60
 )
+
 const (
 	// Player Shot seettings
 	playerShotSpeed     = 240
 	playerShotMissedY   = 28
 	playerShotMissedTTL = 500
-	// 	shotExplodeTTL = 15
-	// 	shotExplodeTTL = 60
 )
 
 const scoreTitle = "SCORE<1> HI-SCORE SCORE<2>"
