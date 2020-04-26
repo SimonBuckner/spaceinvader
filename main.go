@@ -15,6 +15,7 @@ type game struct {
 	backgroundColor sdl.Color
 	sprites         *screen2d.SpriteMap
 	font            *screen2d.SpriteAtlas
+	fontKeys        map[rune]int32
 	pm              *playMode
 }
 
@@ -40,6 +41,7 @@ func main() {
 
 	g.keyb = g.screen.GetKBState()
 	g.loadSpriteMap()
+	g.loadFontAtlas()
 	g.pm = newPlayMode(g)
 	g.activate()
 
@@ -99,6 +101,60 @@ func (g *game) loadSpriteMap() {
 	g.loadSprite(keySquiglyShot2, squiglyShot2)
 	g.loadSprite(keySquiglyShot3, squiglyShot3)
 
+}
+
+func (g *game) loadFontAtlas() {
+	g.font = screen2d.NewSpriteAtlas(g.screen.Rend())
+	g.fontKeys = make(map[rune]int32)
+
+	err := g.font.LoadRGBAPixels(alphabet.Pixels, alphabet.Pitch, 7, 8)
+	if err != nil {
+		panic(err)
+	}
+
+	g.fontKeys['A'] = 0
+	g.fontKeys['B'] = 1
+	g.fontKeys['C'] = 2
+	g.fontKeys['D'] = 3
+	g.fontKeys['E'] = 4
+	g.fontKeys['F'] = 5
+	g.fontKeys['G'] = 6
+	g.fontKeys['H'] = 7
+	g.fontKeys['I'] = 8
+	g.fontKeys['J'] = 9
+	g.fontKeys['K'] = 10
+	g.fontKeys['L'] = 11
+	g.fontKeys['M'] = 12
+	g.fontKeys['N'] = 13
+	g.fontKeys['O'] = 14
+	g.fontKeys['P'] = 15
+	g.fontKeys['Q'] = 16
+	g.fontKeys['R'] = 17
+	g.fontKeys['S'] = 18
+	g.fontKeys['T'] = 19
+	g.fontKeys['U'] = 20
+	g.fontKeys['V'] = 21
+	g.fontKeys['W'] = 22
+	g.fontKeys['X'] = 23
+	g.fontKeys['Y'] = 24
+	g.fontKeys['Z'] = 25
+	g.fontKeys['0'] = 26
+	g.fontKeys['1'] = 27
+	g.fontKeys['2'] = 28
+	g.fontKeys['3'] = 29
+	g.fontKeys['4'] = 30
+	g.fontKeys['5'] = 31
+	g.fontKeys['6'] = 32
+	g.fontKeys['7'] = 33
+	g.fontKeys['8'] = 34
+	g.fontKeys['9'] = 35
+	g.fontKeys['<'] = 36
+	g.fontKeys['>'] = 37
+	g.fontKeys[' '] = 38
+	g.fontKeys['='] = 39
+	g.fontKeys['*'] = 40
+	g.fontKeys['y'] = 41
+	g.fontKeys['-'] = 42
 }
 
 func (g *game) loadSprite(key screen2d.SpriteMapKey, bm *Bitmap) {

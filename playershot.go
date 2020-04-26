@@ -85,4 +85,5 @@ func (ps *playerShot) setHit() {
 	ps.state = playerShotHit
 	ps.explodeTimer = sdl.GetTicks()
 	ps.Visible = false
+	ps.Y = 0
 }

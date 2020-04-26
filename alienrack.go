@@ -112,6 +112,7 @@ func (ar *alienRack) checkForHit(shot *playerShot) bool {
 		if ar.aliens[i].state == alienAlive && screen2d.CheckBoxHit(ar.aliens[i], shot) {
 			if screen2d.CheckPixelHit(shot, ar.aliens[i]) {
 				ar.aliens[i].setHit()
+				shot.setHit()
 				return true
 			}
 		}
@@ -183,7 +184,7 @@ func (ar *alienRack) move() {
 
 }
 
-func (ar *alienRack) draw() {
+func (ar *alienRack) drawRack() {
 	for _, a := range ar.aliens {
 		a.Draw()
 	}

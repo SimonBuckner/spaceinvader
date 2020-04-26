@@ -47,13 +47,13 @@ const (
 const (
 	// Player Shot seettings
 	playerShotSpeed     = 240
-	playerShotMissedY   = 25
+	playerShotMissedY   = 28
 	playerShotMissedTTL = 500
 	// 	shotExplodeTTL = 15
 	// 	shotExplodeTTL = 60
 )
 
-const scoreTitle = "SCORE-1   HI-SCORE   SCORE-2"
+const scoreTitle = "SCORE<1> HI-SCORE SCORE<2>"
 
 const (
 	// Keys to image assets
