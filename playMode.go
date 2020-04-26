@@ -5,6 +5,15 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+type playModeState int
+
+const (
+	pmReady playModeState = iota
+	pmPlaying
+	pmLevelComplete
+	pmDead
+)
+
 const playModeName = "Test Scene"
 
 type playMode struct {
@@ -13,13 +22,14 @@ type playMode struct {
 	p1          *player
 	p1Shot      *playerShot
 	p1AlienRack *alienRack
-
-	frameStart uint32
-	frame      int
-	frameJog   uint32
-	midFrame   bool
-
-	generalCounter int
+	title       *text
+	state       playModeState
+	frameStart  uint32
+	frame       int
+	frameJog    uint32
+	timer       int
+	soundDelay  int
+	soundTimer  int
 }
 
 func newPlayMode(game *game) *playMode {
@@ -30,6 +40,7 @@ func newPlayMode(game *game) *playMode {
 		p1:          newPlayer(game),
 		p1Shot:      newPlayerShot(game),
 		p1AlienRack: newAlienRack(game),
+		title:       newText(game),
 	}
 
 	return pm
@@ -44,6 +55,9 @@ func (pm *playMode) activate() {
 	pm.game.screen.SetKeyDownFunc(pm.onKeyDown)
 	pm.game.screen.SetUpdateFunc(pm.onUpdate)
 	pm.game.screen.SetDrawFunc(pm.onDraw)
+	pm.title.setText(scoreTitle)
+	pm.title.X = 0
+	pm.title.Y = 0
 
 	pm.frame = 0
 	pm.frameStart = sdl.GetTicks()
@@ -60,10 +74,6 @@ func (pm *playMode) onKeyDown(e *sdl.KeyboardEvent) {
 		pm.p1.moveLeft()
 	case sdl.SCANCODE_RIGHT:
 		pm.p1.moveRight()
-	case sdl.SCANCODE_V:
-		//
-	case sdl.SCANCODE_H:
-		//
 	}
 }
 
@@ -128,6 +138,7 @@ func (pm *playMode) onUpdate(ticks uint32, elapsed float32) {
 		pm.p1AlienRack.stepR = 3.0
 	default:
 		// Level complete
+		pm.state = pmLevelComplete
 	}
 
 	// Sync the three alien shots so only one is processed by screen
@@ -180,6 +191,7 @@ func (pm *playMode) moveAliens(ticks uint32, elapsed float32) {
 }
 
 func (pm *playMode) onDraw() {
+	pm.title.drawText()
 	pm.p1.Draw()
 	pm.p1Shot.Draw()
 	pm.p1AlienRack.draw()

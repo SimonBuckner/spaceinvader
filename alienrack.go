@@ -71,14 +71,18 @@ func (ar *alienRack) reset(level int) {
 	ar.cursor = -1
 	ar.stepL = 2.0
 	ar.stepR = 2.0
-	ar.state = arMoving
+	ar.state = arReady
+	ar.timer = 30
 	ar.direction = 1
 }
 
 func (ar *alienRack) update(ticks uint32, elapsed float32, p *player, shot *playerShot) {
 	switch ar.state {
 	case arReady:
-
+		ar.timer--
+		if ar.timer == 0 {
+			ar.state = arMoving
+		}
 	case arMoving:
 		ar.move()
 		ar.aliens[ar.cursor].frame = ar.currentFrame
@@ -128,10 +132,34 @@ func (ar *alienRack) advanceCursor() {
 			} else {
 				ar.currentFrame = 0
 			}
+			ar.checkBounds()
 		}
 		if ar.aliens[ar.cursor].state == alienAlive {
 			return
 		}
+	}
+}
+
+func (ar *alienRack) checkBounds() {
+	minX := float32(math.MaxFloat32)
+	maxX := float32(-1)
+
+	for i := range ar.aliens {
+		if ar.aliens[i].state == alienAlive {
+			if ar.aliens[i].X < minX {
+				minX = ar.aliens[i].X
+			}
+			if ar.aliens[i].X > maxX {
+				maxX = ar.aliens[i].X
+			}
+		}
+	}
+	if ar.direction < 0 && minX <= 0 {
+		ar.direction = +1
+	}
+
+	if ar.direction > 0 && maxX >= (originalWidth-alienColWidth) {
+		ar.direction = -1
 	}
 }
 
@@ -147,29 +175,6 @@ func (ar *alienRack) remainCount() int {
 
 func (ar *alienRack) move() {
 
-	if ar.cursor == 0 {
-
-		minX := float32(math.MaxFloat32)
-		maxX := float32(-1)
-
-		for i := range ar.aliens {
-			if ar.aliens[i].state == alienAlive {
-				if ar.aliens[i].X < minX {
-					minX = ar.aliens[i].X
-				}
-				if ar.aliens[i].X > maxX {
-					maxX = ar.aliens[i].X
-				}
-			}
-		}
-		if ar.direction < 0 && minX <= 0 {
-			ar.direction = +1
-		}
-
-		if ar.direction > 0 && maxX >= (originalWidth-alienColWidth) {
-			ar.direction = -1
-		}
-	}
 	if ar.direction > 0 {
 		ar.aliens[ar.cursor].X += ar.stepR
 	} else {

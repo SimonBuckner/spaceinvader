@@ -53,7 +53,7 @@ const (
 	// 	shotExplodeTTL = 60
 )
 
-const title = "SCORE-1   HI-SCORE   SCORE-2"
+const scoreTitle = "SCORE-1   HI-SCORE   SCORE-2"
 
 const (
 	// Keys to image assets

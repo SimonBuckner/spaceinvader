@@ -14,6 +14,7 @@ type game struct {
 	scale           float32
 	backgroundColor sdl.Color
 	sprites         *screen2d.SpriteMap
+	font            *screen2d.SpriteAtlas
 	pm              *playMode
 }
 
