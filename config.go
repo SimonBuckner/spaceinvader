@@ -72,6 +72,7 @@ const (
 	keyShotExploding
 	keyAlienExplode
 	keySquiglyShot0
+	keySquiglyShot1
 	keySquiglyShot2
 	keySquiglyShot3
 	keyPlungerShot0

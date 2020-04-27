@@ -19,43 +19,57 @@ const (
 const playModeName = "Test Scene"
 
 type playMode struct {
-	game       *game
-	keyb       *screen2d.KBState
-	title      *text
-	p1score    *text
-	p2score    *text
-	highScore  int
-	hiscore    *text
-	p1         *player
-	p2         *player
-	player     *player
-	state      playModeState
-	frameStart uint32
-	frame      int
-	frameJog   uint32
-	timer      int
-	timer2     int
-	soundDelay int
-	soundTimer int
+	game             *game
+	keyb             *screen2d.KBState
+	title            *text
+	p1score          *text
+	p2score          *text
+	highScore        int
+	hiscore          *text
+	p1               *player
+	p2               *player
+	player           *player
+	state            playModeState
+	frameStart       uint32
+	frame            int
+	frameJog         uint32
+	timer            int
+	timer2           int
+	soundDelay       int
+	soundTimer       int
+	rollShot         *alienShot
+	squiglyShot      *alienShot
+	plungerShot      *alienShot
+	syncShot         int
+	rollShotTimer    int
+	squiglyShotTimer int
+	plungerShotTimer int
 }
 
 func newPlayMode(game *game) *playMode {
 
 	pm := &playMode{
-		game:      game,
-		keyb:      game.screen.GetKBState(),
-		p1:        newPlayer(game),
-		p2:        newPlayer(game),
-		title:     newText(game),
-		highScore: 0,
-		p1score:   newText(game),
-		p2score:   newText(game),
-		hiscore:   newText(game),
+		game:        game,
+		keyb:        game.screen.GetKBState(),
+		p1:          newPlayer(game),
+		p2:          newPlayer(game),
+		title:       newText(game),
+		highScore:   0,
+		p1score:     newText(game),
+		p2score:     newText(game),
+		hiscore:     newText(game),
+		rollShot:    newAlienShot(game),
+		squiglyShot: newAlienShot(game),
+		plungerShot: newAlienShot(game),
 	}
 	pm.title.load(game.font, game.fontKeys)
 	pm.p1score.load(game.font, game.fontKeys)
 	pm.hiscore.load(game.font, game.fontKeys)
 	pm.p2score.load(game.font, game.fontKeys)
+
+	pm.rollShot.setKind(askRolling)
+	pm.squiglyShot.setKind(askSquigly)
+	pm.plungerShot.setKind(askPlunger)
 
 	return pm
 }
@@ -94,6 +108,23 @@ func (pm *playMode) activate() {
 	pm.state = pmReady
 	pm.timer = pmReadyTTL
 	pm.timer2 = pmReadyDelayTTL
+
+	pm.rollShot.X = 30
+	pm.rollShot.Y = 40
+	pm.rollShot.Visible = true
+	pm.rollShot.reset()
+
+	pm.squiglyShot.X = 40
+	pm.squiglyShot.Y = 40
+	pm.squiglyShot.Visible = true
+	pm.squiglyShot.reset()
+
+	pm.plungerShot.X = 50
+	pm.plungerShot.Y = 40
+	pm.plungerShot.Visible = true
+	pm.plungerShot.reset()
+
+	pm.syncShot = -1
 
 }
 
@@ -178,6 +209,9 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 		// 19 frames between sounds
 	case aliveCount > 8:
 		// 16 frames between sounds
+		pm.rollShot.deltaY = 5.0
+		pm.squiglyShot.deltaY = 5.0
+		pm.plungerShot.deltaY = 5.0
 	case aliveCount > 7:
 		// 14 frames between sounds
 	case aliveCount > 6:
@@ -200,7 +234,10 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 	}
 
 	// Sync the three alien shots so only one is processed by screen
-
+	pm.syncShot++
+	if pm.syncShot >= 3 {
+		pm.syncShot = 0
+	}
 	// Execute game objects
 
 	// Move player
@@ -212,6 +249,15 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 	// Move rolling shot & plunger shot & either squiggly shot or saucer
 	// Saucer appears every 600 frames whilst > 8 aliens and no squiggly shot on the screen
 	// One shot moves 4 picels each frame
+	switch pm.syncShot {
+	case 0:
+		pm.rollShot.update(ticks, elapsed, pm.player.X)
+	case 1:
+		pm.squiglyShot.update(ticks, elapsed, pm.player.X)
+	case 2:
+		pm.plungerShot.update(ticks, elapsed, pm.player.X)
+	}
+
 	if aliveCount < 8 {
 		// change shot step to 5 pixels
 	}
@@ -239,5 +285,8 @@ func (pm *playMode) onDraw() {
 	pm.p2score.drawText()
 	pm.player.Draw()
 	pm.player.shot.Draw()
+	pm.rollShot.Draw()
+	pm.squiglyShot.Draw()
+	pm.plungerShot.Draw()
 	pm.player.alienRack.drawRack()
 }
