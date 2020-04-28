@@ -36,7 +36,6 @@ func newAlienRack(game *game) *alienRack {
 	}
 	for i := range ar.aliens {
 		ar.aliens[i] = newAlien(game)
-		ar.aliens[i].SetCalcScreenXYFunc(translatePos)
 	}
 	return ar
 }

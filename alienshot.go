@@ -38,14 +38,11 @@ type alienShot struct {
 
 func newAlienShot(game *game) *alienShot {
 	as := &alienShot{
-		Entity: screen2d.NewEntity(),
+		Entity: game.es.NewEntity(),
 		game:   game,
 		state:  asReady,
 		frames: make([]*screen2d.Sprite, 4),
 	}
-
-	as.Scale = game.scale
-	as.SetCalcScreenXYFunc(translatePos)
 	as.setReady(playerX)
 	return as
 }

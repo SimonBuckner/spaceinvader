@@ -29,7 +29,7 @@ type player struct {
 
 func newPlayer(game *game) *player {
 	p := &player{
-		Entity:    screen2d.NewEntity(),
+		Entity:    game.es.NewEntity(),
 		game:      game,
 		shot:      newPlayerShot(game),
 		alienRack: newAlienRack(game),
@@ -37,10 +37,6 @@ func newPlayer(game *game) *player {
 		extraUsed: false,
 		state:     playerAlive,
 	}
-	p.SetCalcScreenXYFunc(translatePos)
-	p.Scale = game.scale
-	p.shot.Scale = game.scale
-	p.alienRack.scale = game.scale
 	return p
 }
 

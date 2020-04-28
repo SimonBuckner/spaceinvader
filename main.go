@@ -9,6 +9,7 @@ import (
 )
 
 type game struct {
+	es              *screen2d.EntityService
 	screen          *screen2d.Screen
 	keyb            *screen2d.KBState
 	scale           float32
@@ -26,18 +27,19 @@ func main() {
 		backgroundColor: sdl.Color{R: 0, G: 0, B: 0, A: 0},
 	}
 
-	g.scale = calcScale(winWidth, winHeight)
-
-	{
-		screen, err := screen2d.NewScreen(winWidth, winHeight, "Space Invaders",
-			screen2d.SetVSync(true),
-			screen2d.SetScalingQuality(screen2d.ScreenScalingNearestPixel))
-		if err != nil {
-			panic(err)
-		}
-		g.screen = screen
+	screen, err := screen2d.NewScreen(winWidth, winHeight, "Space Invaders",
+		screen2d.SetVSync(true),
+		screen2d.SetScalingQuality(screen2d.ScreenScalingNearestPixel))
+	if err != nil {
+		panic(err)
 	}
+	g.screen = screen
 	defer g.screen.Destroy()
+
+	es := screen2d.NewEntityService()
+	es.SetXYProjection(projectXY)
+	es.SetScale(calcScale(winWidth, winHeight))
+	g.es = es
 
 	g.keyb = g.screen.GetKBState()
 	g.loadSpriteMap()
@@ -52,6 +54,68 @@ func (g *game) activate() {
 	g.screen.ClearFuncs()
 	g.screen.SetKeyDownFunc(g.onKeyDown)
 	g.screen.SetUpdateFunc(g.onUpdate)
+}
+
+func (g *game) loadSprite(key screen2d.SpriteMapKey, bm *Bitmap) {
+	s := screen2d.NewSprite(g.screen.Rend())
+	err := s.LoadRGBAPixels(bm.Pixels, bm.Pitch)
+	if err != nil {
+		panic(err)
+	}
+	g.sprites.AddSprite(key, s)
+}
+
+func (g *game) onKeyDown(e *sdl.KeyboardEvent) {
+	switch e.Keysym.Scancode {
+	case sdl.SCANCODE_Q, sdl.SCANCODE_ESCAPE:
+		g.screen.Close()
+		return
+	case sdl.SCANCODE_F1:
+		g.pm.activate()
+	}
+}
+
+func (g *game) onUpdate(ticks uint32, elapsed float32) {
+
+	if g.keyb.IsKeyDown(sdl.SCANCODE_Q) {
+		g.screen.Close()
+	} else if g.keyb.IsKeyDown(sdl.SCANCODE_F1) {
+		g.pm.activate()
+	}
+}
+func calcScale(w, h int32) float32 {
+
+	rW := w / originalWidth
+	rH := h / originalHeight
+	if rW > rH {
+		return float32(rH)
+	}
+	return float32(rW)
+}
+
+func projectXY(x, y float32, scale float32) (int32, int32) {
+
+	scaledW := float32(originalWidth) * scale
+	scaledH := float32(originalHeight) * scale
+
+	offsetX := (float32(winWidth) - scaledW) / 2
+	offsetY := (float32(winHeight) - scaledH) / 2
+
+	scaledX := x * scale
+	scaledY := y * scale
+
+	tX := int32(scaledX + offsetX)
+	tY := int32(scaledY + offsetY)
+
+	return tX, tY
+}
+
+func projectXYDebug(x, y float32, scale float32) (int32, int32) {
+	tX, tY := projectXY(x, y, scale)
+
+	fmt.Printf("X1: %f Y1: %f  -  X2: %04d Y2: %04d\n", x, y, tX, tY)
+
+	return tX, tY
 }
 
 func (g *game) loadSpriteMap() {
@@ -155,70 +219,4 @@ func (g *game) loadFontAtlas() {
 	g.fontKeys['*'] = 40
 	g.fontKeys['y'] = 41
 	g.fontKeys['-'] = 42
-}
-
-func (g *game) loadSprite(key screen2d.SpriteMapKey, bm *Bitmap) {
-	s := screen2d.NewSprite(g.screen.Rend())
-	err := s.LoadRGBAPixels(bm.Pixels, bm.Pitch)
-	if err != nil {
-		panic(err)
-	}
-	g.sprites.AddSprite(key, s)
-}
-
-func (g *game) onKeyDown(e *sdl.KeyboardEvent) {
-	switch e.Keysym.Scancode {
-	case sdl.SCANCODE_Q, sdl.SCANCODE_ESCAPE:
-		g.screen.Close()
-		return
-	case sdl.SCANCODE_D:
-		// g.stage.DumpActors()
-	case sdl.SCANCODE_F1:
-		g.pm.activate()
-	}
-}
-
-func (g *game) onUpdate(ticks uint32, elapsed float32) {
-
-	if g.keyb.IsKeyDown(sdl.SCANCODE_Q) {
-		fmt.Println("Game key down")
-		g.screen.Close()
-	} else if g.keyb.IsKeyDown(sdl.SCANCODE_F1) {
-		fmt.Println("Game key down")
-		g.pm.activate()
-	}
-}
-func calcScale(w, h int32) float32 {
-
-	rW := w / originalWidth
-	rH := h / originalHeight
-	if rW > rH {
-		return float32(rH)
-	}
-	return float32(rW)
-}
-
-func translatePos(x, y float32, scale float32) (tX, tY int32) {
-
-	scaledW := float32(originalWidth) * scale
-	scaledH := float32(originalHeight) * scale
-
-	offsetX := (float32(winWidth) - scaledW) / 2
-	offsetY := (float32(winHeight) - scaledH) / 2
-
-	scaledX := x * scale
-	scaledY := y * scale
-
-	tX = int32(scaledX + offsetX)
-	tY = int32(scaledY + offsetY)
-
-	return
-}
-
-func translatePosDebug(x, y float32, scale float32) (int32, int32) {
-	tX, tY := translatePos(x, y, scale)
-
-	fmt.Printf("X1: %f Y1: %f  -  X2: %04d Y2: %04d\n", x, y, tX, tY)
-
-	return tX, tY
 }

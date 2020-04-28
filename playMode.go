@@ -21,11 +21,11 @@ const playModeName = "Test Scene"
 type playMode struct {
 	game             *game
 	keyb             *screen2d.KBState
-	title            *text
-	p1score          *text
-	p2score          *text
+	title            *screen2d.TextEntity
+	p1score          *screen2d.TextEntity
+	p2score          *screen2d.TextEntity
 	highScore        int
-	hiscore          *text
+	hiscore          *screen2d.TextEntity
 	p1               *player
 	p2               *player
 	player           *player
@@ -53,19 +53,19 @@ func newPlayMode(game *game) *playMode {
 		keyb:        game.screen.GetKBState(),
 		p1:          newPlayer(game),
 		p2:          newPlayer(game),
-		title:       newText(game),
+		title:       game.es.NewTextEntity(),
 		highScore:   0,
-		p1score:     newText(game),
-		p2score:     newText(game),
-		hiscore:     newText(game),
+		p1score:     game.es.NewTextEntity(),
+		p2score:     game.es.NewTextEntity(),
+		hiscore:     game.es.NewTextEntity(),
 		rollShot:    newAlienShot(game),
 		squiglyShot: newAlienShot(game),
 		plungerShot: newAlienShot(game),
 	}
-	pm.title.load(game.font, game.fontKeys)
-	pm.p1score.load(game.font, game.fontKeys)
-	pm.hiscore.load(game.font, game.fontKeys)
-	pm.p2score.load(game.font, game.fontKeys)
+	pm.title.LoadAtlas(game.font, game.fontKeys, 7)
+	pm.p1score.LoadAtlas(game.font, game.fontKeys, 7)
+	pm.hiscore.LoadAtlas(game.font, game.fontKeys, 7)
+	pm.p2score.LoadAtlas(game.font, game.fontKeys, 7)
 
 	pm.rollShot.setKind(askRolling)
 	pm.squiglyShot.setKind(askSquigly)
@@ -82,25 +82,25 @@ func (pm *playMode) activate() {
 	pm.game.screen.SetKeyDownFunc(pm.onKeyDown)
 	pm.game.screen.SetUpdateFunc(pm.onUpdate)
 	pm.game.screen.SetDrawFunc(pm.onDraw)
-	pm.title.setText(scoreTitle)
+	pm.title.SetText(scoreTitle)
 	pm.title.X = 0
 	pm.title.Y = 0
-	pm.title.visible = true
+	pm.title.Visible = true
 
-	pm.p1score.setText(pm.p1.getScore())
+	pm.p1score.SetText(pm.p1.getScore())
 	pm.p1score.X = 14
 	pm.p1score.Y = 16
-	pm.p1score.visible = true
+	pm.p1score.Visible = true
 
-	pm.hiscore.setText(fmt.Sprintf("%04d", pm.highScore))
+	pm.hiscore.SetText(fmt.Sprintf("%04d", pm.highScore))
 	pm.hiscore.X = 70
 	pm.hiscore.Y = 16
-	pm.hiscore.visible = true
+	pm.hiscore.Visible = true
 
-	pm.p2score.setText(pm.p2.getScore())
+	pm.p2score.SetText(pm.p2.getScore())
 	pm.p2score.X = 140
 	pm.p2score.Y = 16
-	pm.p2score.visible = true
+	pm.p2score.Visible = true
 
 	pm.frame = 0
 	pm.frameStart = sdl.GetTicks()
@@ -146,6 +146,7 @@ func (pm *playMode) onUpdate(ticks uint32, elapsed float32) {
 		pm.updatePlaying(ticks, elapsed)
 	case pmLevelComplete:
 		pm.updateLevelComplete(ticks, elapsed)
+		sdl.Delay(5)
 	case pmDead:
 		pm.updateDead(ticks, elapsed)
 	}
@@ -156,9 +157,9 @@ func (pm *playMode) updateReady(ticks uint32, elapsed float32) {
 	pm.timer2--
 	if pm.timer2 == 0 {
 		if pm.player == pm.p1 {
-			pm.p1score.visible = !pm.p1score.visible
+			pm.p1score.Visible = !pm.p1score.Visible
 		} else {
-			pm.p2score.visible = !pm.p1score.visible
+			pm.p2score.Visible = !pm.p1score.Visible
 		}
 		pm.timer2 = pmReadyDelayTTL
 		pm.timer--
@@ -230,6 +231,7 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 		pm.player.alienRack.stepR = 3.0
 	default:
 		// Level complete
+		fmt.Println("Level complete")
 		pm.state = pmLevelComplete
 	}
 
@@ -268,8 +270,8 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 	// Move alien rack
 	pm.player.alienRack.update(ticks, elapsed, pm.p1, pm.player.shot)
 
-	pm.p1score.setText(pm.p1.getScore())
-	pm.p2score.setText(pm.p2.getScore())
+	pm.p1score.SetText(pm.p1.getScore())
+	pm.p2score.SetText(pm.p2.getScore())
 }
 
 func (pm *playMode) updateLevelComplete(ticks uint32, elapsed float32) {
@@ -279,10 +281,10 @@ func (pm *playMode) updateDead(ticks uint32, elapsed float32) {
 }
 
 func (pm *playMode) onDraw() {
-	pm.title.drawText()
-	pm.p1score.drawText()
-	pm.hiscore.drawText()
-	pm.p2score.drawText()
+	pm.title.Draw()
+	pm.p1score.Draw()
+	pm.hiscore.Draw()
+	pm.p2score.Draw()
 	pm.player.Draw()
 	pm.player.shot.Draw()
 	pm.rollShot.Draw()

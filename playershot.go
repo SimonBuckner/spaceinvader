@@ -26,13 +26,10 @@ type playerShot struct {
 
 func newPlayerShot(game *game) *playerShot {
 	ps := &playerShot{
-		Entity: screen2d.NewEntity(),
+		Entity: game.es.NewEntity(),
 		game:   game,
 		state:  playerShotReady,
 	}
-
-	ps.Scale = game.scale
-	ps.SetCalcScreenXYFunc(translatePos)
 	ps.setAvailable(playerX)
 	return ps
 }

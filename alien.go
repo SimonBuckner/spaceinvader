@@ -33,12 +33,10 @@ type alien struct {
 
 func newAlien(game *game) *alien {
 	a := &alien{
-		Entity: screen2d.NewEntity(),
+		Entity: game.es.NewEntity(),
 		game:   game,
 		frame:  0,
 	}
-	a.Scale = game.scale
-
 	return a
 }
 
