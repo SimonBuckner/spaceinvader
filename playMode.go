@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
@@ -76,12 +77,12 @@ func newPlayMode(game *game) *playMode {
 
 func (pm *playMode) activate() {
 	pm.game.screen.ClearFuncs()
-
-	pm.p1.reset()
-	pm.player = pm.p1
 	pm.game.screen.SetKeyDownFunc(pm.onKeyDown)
 	pm.game.screen.SetUpdateFunc(pm.onUpdate)
 	pm.game.screen.SetDrawFunc(pm.onDraw)
+
+	pm.p1.reset()
+	pm.player = pm.p1
 	pm.title.SetText(scoreTitle)
 	pm.title.X = 0
 	pm.title.Y = 0
@@ -124,7 +125,7 @@ func (pm *playMode) activate() {
 	pm.plungerShot.Visible = true
 	pm.plungerShot.reset()
 
-	pm.syncShot = -1
+	pm.syncShot = 0
 
 }
 
@@ -235,11 +236,6 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 		pm.state = pmLevelComplete
 	}
 
-	// Sync the three alien shots so only one is processed by screen
-	pm.syncShot++
-	if pm.syncShot >= 3 {
-		pm.syncShot = 0
-	}
 	// Execute game objects
 
 	// Move player
@@ -255,16 +251,28 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 	case 0:
 		pm.rollShot.update(ticks, elapsed, pm.player.X)
 	case 1:
+		fmt.Println("Frame: " + strconv.Itoa(pm.squiglyShot.frame))
 		pm.squiglyShot.update(ticks, elapsed, pm.player.X)
 	case 2:
 		pm.plungerShot.update(ticks, elapsed, pm.player.X)
 	}
 
-	if aliveCount < 8 {
-		// change shot step to 5 pixels
+	// if screen2d.CheckBoxHit(pm.rollShot, pm.player) {
+	// 	fmt.Println("Roll shot hit player")
+	// }
+
+	if screen2d.CheckBoxHit(pm.squiglyShot, pm.player) {
+		fmt.Println("Squigly shot hit player")
 	}
-	if aliveCount == 1 {
-		// disable plunger shot
+
+	// if screen2d.CheckBoxHit(pm.plungerShot, pm.player) {
+	// 	fmt.Println("Plunger shot hit player")
+	// }
+
+	// Sync the three alien shots so only one is processed by screen
+	pm.syncShot++
+	if pm.syncShot >= 3 {
+		pm.syncShot = 0
 	}
 
 	// Move alien rack

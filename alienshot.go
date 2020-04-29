@@ -81,7 +81,6 @@ func (as *alienShot) update(ticks uint32, elapsed float32, shipX float32) {
 	case asReady:
 
 	case asFired:
-		as.timer--
 		if as.timer == 0 {
 			as.timer = 4
 			as.frame++
@@ -90,6 +89,7 @@ func (as *alienShot) update(ticks uint32, elapsed float32, shipX float32) {
 			}
 			as.SetSprite(as.frames[as.frame])
 		}
+		as.timer--
 		as.Y = as.Y + 4
 		// if as.Y > originalHeight {
 		// 	as.Y = alienShotMissedY

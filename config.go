@@ -16,8 +16,8 @@ const (
 
 const (
 	// Play Mode settings
-	pmReadyTTL      = 23 * 2 // number of on/offs
-	pmReadyDelayTTL = 3      // Delay between each on/off
+	pmReadyTTL      = 6 //23 * 2 // number of on/offs
+	pmReadyDelayTTL = 3 // Delay between each on/off
 )
 
 const (
