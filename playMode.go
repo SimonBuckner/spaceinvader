@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
@@ -37,9 +38,7 @@ type playMode struct {
 	timer2           int
 	soundDelay       int
 	soundTimer       int
-	rollShot         *alienShot
-	squiglyShot      *alienShot
-	plungerShot      *alienShot
+	alienShots       []*alienShot
 	syncShot         int
 	rollShotTimer    int
 	squiglyShotTimer int
@@ -49,28 +48,33 @@ type playMode struct {
 func newPlayMode(game *game) *playMode {
 
 	pm := &playMode{
-		game:        game,
-		keyb:        game.screen.GetKBState(),
-		p1:          newPlayer(game),
-		p2:          newPlayer(game),
-		title:       game.es.NewTextEntity(),
-		highScore:   0,
-		p1score:     game.es.NewTextEntity(),
-		p2score:     game.es.NewTextEntity(),
-		hiscore:     game.es.NewTextEntity(),
-		rollShot:    newAlienShot(game),
-		squiglyShot: newAlienShot(game),
-		plungerShot: newAlienShot(game),
+		game:       game,
+		keyb:       game.screen.GetKBState(),
+		p1:         newPlayer(game),
+		p2:         newPlayer(game),
+		title:      game.es.NewTextEntity(),
+		highScore:  0,
+		p1score:    game.es.NewTextEntity(),
+		p2score:    game.es.NewTextEntity(),
+		hiscore:    game.es.NewTextEntity(),
+		alienShots: make([]*alienShot, 3),
 	}
 	pm.title.LoadAtlas(game.font, game.fontKeys, 7)
 	pm.p1score.LoadAtlas(game.font, game.fontKeys, 7)
 	pm.hiscore.LoadAtlas(game.font, game.fontKeys, 7)
 	pm.p2score.LoadAtlas(game.font, game.fontKeys, 7)
 
-	pm.rollShot.setKind(askRolling)
-	pm.squiglyShot.setKind(askSquigly)
-	pm.plungerShot.setKind(askPlunger)
+	rollShot := newAlienShot(game)
+	squiglyShot := newAlienShot(game)
+	plungerShot := newAlienShot(game)
 
+	rollShot.setKind(askRolling)
+	squiglyShot.setKind(askSquigly)
+	plungerShot.setKind(askPlunger)
+
+	pm.alienShots[0] = rollShot
+	pm.alienShots[1] = squiglyShot
+	pm.alienShots[2] = plungerShot
 	return pm
 }
 
@@ -109,20 +113,14 @@ func (pm *playMode) activate() {
 	pm.timer = pmReadyTTL
 	pm.timer2 = pmReadyDelayTTL
 
-	pm.rollShot.X = 30
-	pm.rollShot.Y = 40
-	pm.rollShot.Visible = true
-	pm.rollShot.reset()
-
-	pm.squiglyShot.X = 40
-	pm.squiglyShot.Y = 40
-	pm.squiglyShot.Visible = true
-	pm.squiglyShot.reset()
-
-	pm.plungerShot.X = 50
-	pm.plungerShot.Y = 40
-	pm.plungerShot.Visible = true
-	pm.plungerShot.reset()
+	x := float32(30)
+	for i := range pm.alienShots {
+		pm.alienShots[i].X = x
+		pm.alienShots[i].Y = 40
+		pm.alienShots[i].Visible = true
+		pm.alienShots[i].reset()
+		x = x + 20.0
+	}
 
 	pm.syncShot = 0
 
@@ -210,9 +208,9 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 		// 19 frames between sounds
 	case aliveCount > 8:
 		// 16 frames between sounds
-		pm.rollShot.deltaY = 5.0
-		pm.squiglyShot.deltaY = 5.0
-		pm.plungerShot.deltaY = 5.0
+		for i := range pm.alienShots {
+			pm.alienShots[i].deltaY = 5.0
+		}
 	case aliveCount > 7:
 		// 14 frames between sounds
 	case aliveCount > 6:
@@ -246,32 +244,28 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 	// Move rolling shot & plunger shot & either squiggly shot or saucer
 	// Saucer appears every 600 frames whilst > 8 aliens and no squiggly shot on the screen
 	// One shot moves 4 picels each frame
-	switch pm.syncShot {
-	case 0:
-		pm.rollShot.update(ticks, elapsed, pm.player.X)
-	case 1:
-		// fmt.Println("Frame: " + strconv.Itoa(pm.squiglyShot.frame))
-		pm.squiglyShot.update(ticks, elapsed, pm.player.X)
-	case 2:
-		pm.plungerShot.update(ticks, elapsed, pm.player.X)
-	}
-
-	if screen2d.CheckBoxHit(pm.rollShot, pm.player) {
-		fmt.Println("Roll shot hit player")
-	}
-
-	if screen2d.CheckBoxHit(pm.squiglyShot, pm.player) {
-		fmt.Println("Squigly shot hit player")
-	}
-
-	if screen2d.CheckBoxHit(pm.plungerShot, pm.player) {
-		fmt.Println("Plunger shot hit player")
-	}
+	pm.alienShots[pm.syncShot].update(ticks, elapsed, pm.player.X)
 
 	// Sync the three alien shots so only one is processed by screen
 	pm.syncShot++
 	if pm.syncShot >= 3 {
 		pm.syncShot = 0
+	}
+
+	for i := range pm.alienShots {
+
+		aShot := pm.alienShots[i]
+		if screen2d.CheckBoxHit(aShot, pm.player.shot) {
+			if screen2d.CheckPixelHit(aShot, pm.player.shot) {
+				fmt.Println("Shot " + strconv.Itoa(i) + " hit player shot")
+			}
+		}
+
+		if screen2d.CheckBoxHit(aShot, pm.player) {
+			if screen2d.CheckPixelHit(aShot, pm.player) {
+				fmt.Println("Shot " + strconv.Itoa(i) + " hit player")
+			}
+		}
 	}
 
 	// Move alien rack
@@ -294,8 +288,8 @@ func (pm *playMode) onDraw() {
 	pm.p2score.Draw()
 	pm.player.Draw()
 	pm.player.shot.Draw()
-	pm.rollShot.Draw()
-	pm.squiglyShot.Draw()
-	pm.plungerShot.Draw()
+	for i := range pm.alienShots {
+		pm.alienShots[i].Draw()
+	}
 	pm.player.alienRack.drawRack()
 }
