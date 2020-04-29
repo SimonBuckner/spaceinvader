@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/SimonBuckner/screen2d"
 	"github.com/veandco/go-sdl2/sdl"
@@ -251,23 +250,23 @@ func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
 	case 0:
 		pm.rollShot.update(ticks, elapsed, pm.player.X)
 	case 1:
-		fmt.Println("Frame: " + strconv.Itoa(pm.squiglyShot.frame))
+		// fmt.Println("Frame: " + strconv.Itoa(pm.squiglyShot.frame))
 		pm.squiglyShot.update(ticks, elapsed, pm.player.X)
 	case 2:
 		pm.plungerShot.update(ticks, elapsed, pm.player.X)
 	}
 
-	// if screen2d.CheckBoxHit(pm.rollShot, pm.player) {
-	// 	fmt.Println("Roll shot hit player")
-	// }
+	if screen2d.CheckBoxHit(pm.rollShot, pm.player) {
+		fmt.Println("Roll shot hit player")
+	}
 
 	if screen2d.CheckBoxHit(pm.squiglyShot, pm.player) {
 		fmt.Println("Squigly shot hit player")
 	}
 
-	// if screen2d.CheckBoxHit(pm.plungerShot, pm.player) {
-	// 	fmt.Println("Plunger shot hit player")
-	// }
+	if screen2d.CheckBoxHit(pm.plungerShot, pm.player) {
+		fmt.Println("Plunger shot hit player")
+	}
 
 	// Sync the three alien shots so only one is processed by screen
 	pm.syncShot++

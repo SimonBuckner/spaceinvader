@@ -162,6 +162,7 @@ func (g *game) loadSpriteMap() {
 	g.loadSprite(keySpriteSaucerExp, spriteSaucerExp)
 
 	g.loadSprite(keySquiglyShot0, squiglyShot0)
+	g.loadSprite(keySquiglyShot1, squiglyShot1)
 	g.loadSprite(keySquiglyShot2, squiglyShot2)
 	g.loadSprite(keySquiglyShot3, squiglyShot3)
 
