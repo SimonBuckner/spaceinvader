@@ -52,9 +52,13 @@ func (p *player) reset() {
 
 func (p *player) update(ticks uint32, elapsed float32) {
 	// delta := (p.direction * shipSpeed * elapsed)
-	newX := p.X
-	if newX > 0 && int(newX) < originalWidth-playerwidth {
-		p.X = newX
+
+	if p.X <= playerMinX {
+		p.X = playerMinX
+		return
+	}
+	if p.X > playerMaxX {
+		p.X = playerMaxX
 	}
 }
 

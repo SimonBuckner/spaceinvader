@@ -59,10 +59,10 @@ func newPlayMode(game *game) *playMode {
 		hiscore:    game.es.NewTextEntity(),
 		alienShots: make([]*alienShot, 3),
 	}
-	pm.title.LoadAtlas(game.font, game.fontKeys, 7)
-	pm.p1score.LoadAtlas(game.font, game.fontKeys, 7)
-	pm.hiscore.LoadAtlas(game.font, game.fontKeys, 7)
-	pm.p2score.LoadAtlas(game.font, game.fontKeys, 7)
+	pm.title.LoadAtlas(game.font, game.fontKeys, 8)
+	pm.p1score.LoadAtlas(game.font, game.fontKeys, 8)
+	pm.hiscore.LoadAtlas(game.font, game.fontKeys, 8)
+	pm.p2score.LoadAtlas(game.font, game.fontKeys, 8)
 
 	rollShot := newAlienShot(game)
 	squiglyShot := newAlienShot(game)
@@ -87,23 +87,23 @@ func (pm *playMode) activate() {
 	pm.p1.reset()
 	pm.player = pm.p1
 	pm.title.SetText(scoreTitle)
-	pm.title.X = 0
-	pm.title.Y = 0
+	pm.title.X = scoreTitleX
+	pm.title.Y = scoreTitleY
 	pm.title.Visible = true
 
 	pm.p1score.SetText(pm.p1.getScore())
-	pm.p1score.X = 14
-	pm.p1score.Y = 16
+	pm.p1score.X = scoreP1X
+	pm.p1score.Y = scoreY
 	pm.p1score.Visible = true
 
 	pm.hiscore.SetText(fmt.Sprintf("%04d", pm.highScore))
-	pm.hiscore.X = 70
-	pm.hiscore.Y = 16
+	pm.hiscore.X = scoreHiX
+	pm.hiscore.Y = scoreY
 	pm.hiscore.Visible = true
 
 	pm.p2score.SetText(pm.p2.getScore())
-	pm.p2score.X = 140
-	pm.p2score.Y = 16
+	pm.p2score.X = scoreP2X
+	pm.p2score.Y = scoreY
 	pm.p2score.Visible = true
 
 	pm.frame = 0

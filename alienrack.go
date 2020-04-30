@@ -156,11 +156,11 @@ func (ar *alienRack) checkBounds() {
 			}
 		}
 	}
-	if ar.direction < 0 && minX <= 0 {
+	if ar.direction < 0 && minX <= alienMinX {
 		ar.direction = +1
 	}
 
-	if ar.direction > 0 && maxX >= (originalWidth-alienColWidth) {
+	if ar.direction > 0 && maxX >= alienMaxX {
 		ar.direction = -1
 	}
 }

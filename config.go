@@ -7,9 +7,11 @@ import "github.com/SimonBuckner/screen2d"
 */
 const (
 	// Screen settings
-	originalWidth  = 224
+	originalWidth  = 28 * 8 // 224
 	originalHeight = 256
 
+	// winWidth  = 250
+	// winHeight = 300
 	winWidth  = 1024
 	winHeight = 768
 )
@@ -26,12 +28,14 @@ const (
 	alienCols = 11
 
 	alienRowHeight = 16
-	alienColWidth  = 16
+	alienColWidth  = 15
 
-	alienStartX = 10
+	alienStartX = 14
 	alienStartY = originalHeight - 0x78
 
 	alienFrameTimer = 1000
+	alienMinX       = 2 * 8
+	alienMaxX       = 25 * 8
 )
 
 const (
@@ -44,6 +48,8 @@ const (
 	playerY = originalHeight - (playerHeight * 4)
 
 	// shipSpeed = 60
+	playerMinX = 2 * 8
+	playerMaxX = 26*8 - playerwidth
 )
 
 const (
@@ -53,7 +59,16 @@ const (
 	playerShotMissedTTL = 500
 )
 
-const scoreTitle = "SCORE<1> HI-SCORE SCORE<2>"
+const (
+	// Score Settings
+	scoreTitleX = 1 * 8
+	scoreTitleY = 0
+	scoreTitle  = "SCORE<1> HI-SCORE SCORE<2>"
+	scoreY      = 16
+	scoreP1X    = 3 * 8
+	scoreHiX    = 22 * 8
+	scoreP2X    = 21 * 8
+)
 
 const (
 	// Keys to image assets
@@ -70,6 +85,7 @@ const (
 	keyPlrBlowupSprite1
 	keyPlayerShotSpr
 	keyShotExploding
+	keyAlienShotExploding
 	keyAlienExplode
 	keySquiglyShot0
 	keySquiglyShot1

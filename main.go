@@ -140,7 +140,6 @@ func (g *game) loadSpriteMap() {
 
 	g.loadSprite(keyPlayerShotSpr, playerShotSpr)
 	g.loadSprite(keyPlayerSprite, playerSprite)
-
 	g.loadSprite(keyPlrBlowupSprite0, plrBlowupSprite0)
 	g.loadSprite(keyPlrBlowupSprite1, plrBlowupSprite1)
 
@@ -157,6 +156,7 @@ func (g *game) loadSpriteMap() {
 	g.loadSprite(keyShieldImage, shieldImage)
 
 	g.loadSprite(keyShotExploding, shotExploding)
+	g.loadSprite(keyAlienShotExploding, aShotExplo)
 
 	g.loadSprite(keySpriteSaucer, spriteSaucer)
 	g.loadSprite(keySpriteSaucerExp, spriteSaucerExp)
