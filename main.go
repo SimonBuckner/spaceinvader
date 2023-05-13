@@ -77,9 +77,9 @@ func (g *game) onKeyDown(e *sdl.KeyboardEvent) {
 
 func (g *game) onUpdate(ticks uint32, elapsed float32) {
 
-	if g.keyb.IsKeyDown(sdl.SCANCODE_Q) {
+	if g.keyb.IsKeyDown(uint8(sdl.K_q)) {
 		g.screen.Close()
-	} else if g.keyb.IsKeyDown(sdl.SCANCODE_F1) {
+	} else if g.keyb.IsKeyDown(uint8(sdl.SCANCODE_F1)) {
 		g.pm.activate()
 	}
 }

@@ -169,14 +169,14 @@ func (pm *playMode) updateReady(ticks uint32, elapsed float32) {
 }
 
 func (pm *playMode) updatePlaying(ticks uint32, elapsed float32) {
-	if pm.keyb.IsKeyDown(sdl.SCANCODE_LEFT) != pm.keyb.IsKeyDown(sdl.SCANCODE_RIGHT) {
-		if pm.keyb.IsKeyDown(sdl.SCANCODE_LEFT) {
+	if pm.keyb.IsKeyDown(uint8(sdl.SCANCODE_LEFT)) != pm.keyb.IsKeyDown(uint8(sdl.SCANCODE_RIGHT)) {
+		if pm.keyb.IsKeyDown(uint8(sdl.SCANCODE_LEFT)) {
 			pm.player.moveLeft()
 		} else {
 			pm.player.moveRight()
 		}
 	}
-	if pm.keyb.IsKeyDown(sdl.SCANCODE_SPACE) {
+	if pm.keyb.IsKeyDown(uint8(sdl.SCANCODE_SPACE)) {
 		pm.player.shot.fire()
 	}
 
